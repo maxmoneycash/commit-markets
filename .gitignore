@@ -1,0 +1,17 @@
+# Harvested data is derived from real (incl. private) repos — never commit it.
+/data/*
+!/data/.gitkeep
+
+# Generated charts
+*.png
+
+# Throwaway clones for repos not checked out locally
+/scripts/clones/
+/.cache/
+
+# Node / Python
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
