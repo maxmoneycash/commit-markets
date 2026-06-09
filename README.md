@@ -123,9 +123,11 @@ data/              generated output (gitignored)
 
 ## Status
 
-Exploratory but real. The index engine works on live data. The market mechanism
-(perp, funding, listing fee + lister fee-share, on-chain settlement on Sui) is
-design-stage. Open questions are listed at the bottom of
+Standalone, exploratory but real. Being built **frontend-first**: a viral,
+play-money **GitHub Stock Exchange** (instant, no money, no chain) is the wedge —
+see [`docs/PRODUCT.md`](docs/PRODUCT.md) and [`web/`](web/). The real financial
+market layer (perp, funding, listing fee + lister fee-share, settlement venue) is
+a later, independent phase. Open questions are at the bottom of
 [`docs/DECISION.md`](docs/DECISION.md).
 
 ## Credits
