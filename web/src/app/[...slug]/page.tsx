@@ -1,13 +1,31 @@
 import { getUserTicker, getRepoTicker, analystBlurb, type Ticker } from "@/lib/github";
 import TickerChart from "@/components/TickerChart";
+import ShareButton from "@/components/ShareButton";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 
 export const revalidate = 3600;
 
 async function resolve(slug: string[]): Promise<Ticker | null> {
   if (slug.length >= 2) return getRepoTicker(slug[0], slug.slice(1).join("/"));
   return getUserTicker(slug[0]);
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const handle = slug.join("/");
+  const t = await resolve(slug);
+  if (!t) return { title: "ticker not found — commit-markets" };
+  const title = `${t.symbol} — commit-markets`;
+  const description = analystBlurb(t);
+  const og = `/api/og?handle=${encodeURIComponent(handle)}`;
+  return {
+    title,
+    description,
+    openGraph: { title, description, images: [{ url: og, width: 1200, height: 630 }] },
+    twitter: { card: "summary_large_image", title, description, images: [og] },
+  };
 }
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: string }) {
@@ -62,6 +80,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
       {/* chart */}
       <div className="overflow-hidden rounded-lg border border-white/5 bg-[#0b0f0e]">
         <TickerChart candles={t.candles} volume={t.volume} up={up} />
+      </div>
+
+      <div className="mt-3 flex justify-end">
+        <ShareButton handle={t.handle} symbol={t.symbol} change={s.changePct30d} />
       </div>
 
       {/* stats */}
