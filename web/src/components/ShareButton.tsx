@@ -32,7 +32,7 @@ export default function ShareButton({
     <div className="flex items-center gap-2">
       <button
         onClick={copy}
-        className="rounded-md border border-white/10 px-3 py-1.5 font-mono text-xs text-neutral-300 hover:border-emerald-500/40 hover:text-emerald-300"
+        className="rounded-md border border-line px-3 py-1.5 font-mono text-xs text-muted-foreground hover:border-ring hover:text-foreground"
       >
         {copied ? "copied ✓" : "copy link"}
       </button>
@@ -40,7 +40,7 @@ export default function ShareButton({
         href={intent}
         target="_blank"
         rel="noreferrer"
-        className="rounded-md bg-emerald-500/90 px-3 py-1.5 font-mono text-xs font-semibold text-black hover:bg-emerald-400"
+        className="rounded-md bg-primary px-3 py-1.5 font-mono text-xs font-semibold text-primary-foreground hover:opacity-90"
       >
         share to X
       </a>

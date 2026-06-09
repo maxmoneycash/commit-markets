@@ -17,29 +17,29 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-5">
-      <div className="w-full max-w-xl text-center">
-        <div className="mb-2 font-mono text-xs uppercase tracking-[0.3em] text-emerald-400/80">
+    <main className="px-2">
+      <div className="mx-auto flex min-h-[calc(100svh-var(--header-height))] max-w-3xl flex-col items-center justify-center border-x border-line px-6 text-center">
+        <div className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-success">
           commit-markets
         </div>
-        <h1 className="text-4xl font-bold tracking-tight text-neutral-100 sm:text-5xl">
+        <h1 className="text-4xl font-semibold tracking-tight text-foreground text-balance sm:text-5xl">
           The GitHub Stock Exchange
         </h1>
-        <p className="mt-3 font-mono text-sm text-neutral-500">
+        <p className="mt-3 font-mono text-sm text-muted-foreground">
           Every dev is a stock. Every repo is a ticker. Trade the tape of code.
         </p>
 
-        <form onSubmit={go} className="mt-8 flex gap-2">
+        <form onSubmit={go} className="mt-8 flex w-full max-w-md gap-2">
           <input
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="github handle  or  owner/repo"
-            className="w-full rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 font-mono text-sm text-neutral-100 placeholder:text-neutral-600 outline-none focus:border-emerald-500/40"
+            className="w-full rounded-md border border-input bg-card px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
           />
           <button
             type="submit"
-            className="rounded-lg bg-emerald-500/90 px-5 py-3 font-mono text-sm font-semibold text-black hover:bg-emerald-400"
+            className="rounded-md bg-primary px-5 py-3 font-mono text-sm font-semibold text-primary-foreground hover:opacity-90"
           >
             List
           </button>
@@ -50,7 +50,7 @@ export default function Home() {
             <Link
               key={h}
               href={`/${h}`}
-              className="rounded-full border border-white/10 px-3 py-1 font-mono text-xs text-neutral-400 hover:border-emerald-500/40 hover:text-emerald-300"
+              className="rounded-full border border-line px-3 py-1 font-mono text-xs text-muted-foreground hover:border-ring hover:text-foreground"
             >
               ${h.split("/").pop()?.toUpperCase()}
             </Link>
