@@ -5,13 +5,12 @@
 # Generated charts
 *.png
 
-# Throwaway clones for repos not checked out locally
-/scripts/clones/
-/.cache/
+# Rust build output
+/target/
 
-# Node / Python
-node_modules/
+# Python (legacy)
 __pycache__/
 *.pyc
 .venv/
+
 .DS_Store
