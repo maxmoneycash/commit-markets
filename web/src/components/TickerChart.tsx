@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTheme } from "next-themes";
 import {
   createChart,
   CandlestickSeries,
@@ -10,43 +11,54 @@ import {
 } from "lightweight-charts";
 import type { Candle, VolumeBar } from "@/lib/github";
 
+// Zinc palettes matched to the chanhdai theme tokens. Hardcoded hex (not the
+// oklch CSS vars) because the canvas renderer needs concrete colors.
+const PALETTES = {
+  dark: { bg: "#18181b", grid: "#27272a", text: "#a1a1aa", border: "#27272a" },
+  light: { bg: "#ffffff", grid: "#f4f4f5", text: "#71717a", border: "#e4e4e7" },
+};
+const UP = "#26a69a";
+const DOWN = "#ef5350";
+
 export default function TickerChart({
   candles,
   volume,
-  up,
 }: {
   candles: Candle[];
   volume: VolumeBar[];
-  up: boolean;
+  up?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     if (!ref.current) return;
+    const p = resolvedTheme === "light" ? PALETTES.light : PALETTES.dark;
+
     const chart: IChartApi = createChart(ref.current, {
       layout: {
-        background: { type: ColorType.Solid, color: "#0b0f0e" },
-        textColor: "#8a9a94",
-        fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+        background: { type: ColorType.Solid, color: p.bg },
+        textColor: p.text,
+        fontFamily: "var(--font-mono), ui-monospace, monospace",
         attributionLogo: false,
       },
       grid: {
-        vertLines: { color: "#141b19" },
-        horzLines: { color: "#141b19" },
+        vertLines: { color: p.grid },
+        horzLines: { color: p.grid },
       },
-      rightPriceScale: { borderColor: "#1c2522" },
-      timeScale: { borderColor: "#1c2522", timeVisible: false },
+      rightPriceScale: { borderColor: p.border },
+      timeScale: { borderColor: p.border, timeVisible: false },
       crosshair: { mode: 0 },
       autoSize: true,
     });
 
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: "#26a69a",
-      downColor: "#ef5350",
-      borderUpColor: "#26a69a",
-      borderDownColor: "#ef5350",
-      wickUpColor: "#26a69a",
-      wickDownColor: "#ef5350",
+      upColor: UP,
+      downColor: DOWN,
+      borderUpColor: UP,
+      borderDownColor: DOWN,
+      wickUpColor: UP,
+      wickDownColor: DOWN,
     });
     candleSeries.setData(candles);
 
@@ -62,13 +74,7 @@ export default function TickerChart({
     chart.timeScale().fitContent();
 
     return () => chart.remove();
-  }, [candles, volume]);
+  }, [candles, volume, resolvedTheme]);
 
-  return (
-    <div
-      ref={ref}
-      className="h-[420px] w-full"
-      style={{ boxShadow: up ? "inset 0 0 120px rgba(38,166,154,0.06)" : "inset 0 0 120px rgba(239,83,80,0.06)" }}
-    />
-  );
+  return <div ref={ref} className="h-[420px] w-full" />;
 }
