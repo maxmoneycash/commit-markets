@@ -1,5 +1,5 @@
 import { getUserTicker, getRepoTicker, analystBlurb, type Ticker } from "@/lib/github";
-import TickerChart from "@/components/TickerChart";
+import CandleChart from "@/components/CandleChart";
 import ShareButton from "@/components/ShareButton";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -79,8 +79,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
         </div>
 
         {/* chart */}
-        <div className="screen-line-bottom bg-card">
-          <TickerChart candles={t.candles} volume={t.volume} up={up} />
+        <div className="screen-line-bottom px-2 py-2">
+          <CandleChart candles={t.candles} volume={t.volume} />
         </div>
 
         {/* share */}

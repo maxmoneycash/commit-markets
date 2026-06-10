@@ -149,6 +149,18 @@
   --selection-foreground: oklch(0.141 0.005 285.823);
 }
 
+/* dot-grid background for the chart (bklit-style, with edge fade) */
+.cm-dotbg {
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--border) 85%, transparent) 1px,
+    transparent 1.5px
+  );
+  background-size: 18px 18px;
+  background-position: -9px -9px;
+  -webkit-mask-image: radial-gradient(ellipse 92% 88% at 50% 50%, #000 70%, transparent 100%);
+  mask-image: radial-gradient(ellipse 92% 88% at 50% 50%, #000 70%, transparent 100%);
+}
+
 @layer base {
   *,
   ::after,
