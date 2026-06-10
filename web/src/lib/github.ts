@@ -16,6 +16,8 @@ export type Candle = {
 };
 export type VolumeBar = { time: string; value: number; color: string };
 
+export type Day = { date: string; commits: number };
+
 export type Ticker = {
   kind: "user" | "repo";
   handle: string; // torvalds  |  vercel/next.js
@@ -25,17 +27,43 @@ export type Ticker = {
   url: string;
   candles: Candle[];
   volume: VolumeBar[];
+  days: Day[]; // daily commit counts (for the activity heatmap)
   stats: {
     price: number; // latest momentum value (cosmetic "$")
     changePct30d: number;
     totalLastYear: number; // commits/contributions last 52w
     peakWeek: number; // busiest week (commits)
     currentStreakDays: number; // user only; 0 for repo
+    longestStreak: number; // longest run of active days
+    activeDays: number; // days with >=1 commit
+    avgPerWeek: number; // mean commits/week
+    busiestDay: number; // most commits in a single day
     followers: number; // user only
     contributors: number; // repo only
     marketCap: number; // fun, derived
   };
 };
+
+// Derived activity metrics from a daily series.
+function dayStats(days: Day[]) {
+  let longest = 0;
+  let run = 0;
+  let active = 0;
+  let busiest = 0;
+  for (const d of days) {
+    if (d.commits > 0) {
+      run++;
+      active++;
+      if (run > longest) longest = run;
+      if (d.commits > busiest) busiest = d.commits;
+    } else {
+      run = 0;
+    }
+  }
+  const total = days.reduce((s, d) => s + d.commits, 0);
+  const weeks = Math.max(1, days.length / 7);
+  return { longestStreak: longest, activeDays: active, busiestDay: busiest, avgPerWeek: +(total / weeks).toFixed(1) };
+}
 
 const GREEN = "rgba(38,166,154,0.5)";
 const RED = "rgba(239,83,80,0.5)";
@@ -137,6 +165,7 @@ export async function getUserTicker(login: string): Promise<Ticker | null> {
   const followers = u.followers.totalCount;
   const last = price[price.length - 1] ?? 0;
   const monthAgo = price[Math.max(0, price.length - 30)] ?? last;
+  const ds = dayStats(days);
 
   return {
     kind: "user",
@@ -147,12 +176,17 @@ export async function getUserTicker(login: string): Promise<Ticker | null> {
     url: u.url,
     candles,
     volume,
+    days,
     stats: {
       price: last,
       changePct30d: pct(last, monthAgo),
       totalLastYear: total,
       peakWeek: Math.max(0, ...volume.map((v) => v.value)),
       currentStreakDays: streak,
+      longestStreak: ds.longestStreak,
+      activeDays: ds.activeDays,
+      avgPerWeek: ds.avgPerWeek,
+      busiestDay: ds.busiestDay,
       followers,
       contributors: 0,
       marketCap: Math.round(total * 100 + followers * 50 + last * 1000),
@@ -206,6 +240,7 @@ export async function getRepoTicker(
   const total = weeks.reduce((s, w) => s + w.total, 0);
   const last = price[price.length - 1] ?? 0;
   const monthAgo = price[Math.max(0, price.length - 30)] ?? last;
+  const ds = dayStats(days);
 
   return {
     kind: "repo",
@@ -216,12 +251,17 @@ export async function getRepoTicker(
     url: `https://github.com/${owner}/${repo}`,
     candles,
     volume,
+    days,
     stats: {
       price: last,
       changePct30d: pct(last, monthAgo),
       totalLastYear: total,
       peakWeek: Math.max(0, ...volume.map((v) => v.value)),
       currentStreakDays: 0,
+      longestStreak: ds.longestStreak,
+      activeDays: ds.activeDays,
+      avgPerWeek: ds.avgPerWeek,
+      busiestDay: ds.busiestDay,
       followers: stars,
       contributors,
       marketCap: Math.round(total * 100 + stars * 50 + last * 1000),

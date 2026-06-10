@@ -1,6 +1,8 @@
 import { getUserTicker, getRepoTicker, analystBlurb, type Ticker } from "@/lib/github";
 import CandleChart from "@/components/CandleChart";
 import ShareButton from "@/components/ShareButton";
+import { ActivityHeatmap } from "@/components/ActivityHeatmap";
+import { Panel, PanelHeader, PanelTitle, PanelContent } from "@/components/panel";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -28,11 +30,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-function Stat({ label, value, accent }: { label: string; value: string; accent?: string }) {
+function StatCell({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
-    <div className="flex flex-col gap-1 border-l border-line px-4 first:border-l-0 first:pl-0">
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
-      <span className={`font-mono text-sm ${accent ?? "text-foreground"}`}>{value}</span>
+    <div className="flex flex-col gap-1 bg-background px-4 py-3">
+      <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className={`font-mono text-base tabular-nums ${accent ?? "text-foreground"}`}>{value}</span>
     </div>
   );
 }
@@ -46,71 +48,102 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
   const up = s.changePct30d >= 0;
   const changeColor = up ? "text-success" : "text-destructive";
 
+  const stats: { label: string; value: string; accent?: string }[] = [
+    { label: "Mkt Cap", value: `$${(s.marketCap / 1000).toFixed(1)}K` },
+    { label: "Commits 52w", value: s.totalLastYear.toLocaleString() },
+    { label: "Avg / wk", value: s.avgPerWeek.toString() },
+    { label: "Peak week", value: `${s.peakWeek}` },
+    { label: "Active days", value: `${s.activeDays}` },
+    { label: "Longest streak", value: `${s.longestStreak}d` },
+    t.kind === "user"
+      ? { label: "Streak", value: `${s.currentStreakDays}d`, accent: s.currentStreakDays > 0 ? "text-success" : undefined }
+      : { label: "Busiest day", value: `${s.busiestDay}` },
+    t.kind === "user"
+      ? { label: "Followers", value: s.followers.toLocaleString() }
+      : { label: "Stars", value: s.followers.toLocaleString() },
+  ];
+
   return (
     <main className="px-2">
-      <div className="mx-auto max-w-3xl border-x border-line">
-        {/* header */}
-        <div className="screen-line-bottom flex items-start justify-between gap-4 px-4 py-5">
-          <div className="flex items-center gap-4">
-            {t.avatarUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={t.avatarUrl} alt="" className="size-14 rounded-md border border-line" />
-            )}
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="font-mono text-2xl font-bold tracking-tight text-foreground">{t.symbol}</h1>
-                <span className="rounded border border-line px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {t.kind}
-                </span>
+      <div className="mx-auto max-w-3xl">
+        {/* hero header */}
+        <Panel>
+          <div className="flex items-start justify-between gap-4 px-4 py-5">
+            <div className="flex items-center gap-4">
+              {t.avatarUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={t.avatarUrl} alt="" className="size-14 rounded-md border border-line" />
+              )}
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="font-mono text-2xl font-bold tracking-tight text-foreground">{t.symbol}</h1>
+                  <span className="rounded border border-line px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {t.kind}
+                  </span>
+                </div>
+                <a href={t.url} target="_blank" className="font-mono text-sm text-muted-foreground hover:text-foreground">
+                  {t.handle}
+                </a>
               </div>
-              <a href={t.url} target="_blank" className="font-mono text-sm text-muted-foreground hover:text-foreground">
-                {t.handle}
-              </a>
+            </div>
+            <div className="text-right">
+              <div className="font-mono text-3xl font-bold tabular-nums text-foreground">
+                {s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <div className={`font-mono text-sm tabular-nums ${changeColor}`}>
+                {up ? "▲" : "▼"} {Math.abs(s.changePct30d)}% <span className="text-muted-foreground">30d</span>
+              </div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="font-mono text-3xl font-bold tabular-nums text-foreground">
-              {s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <div className={`font-mono text-sm tabular-nums ${changeColor}`}>
-              {up ? "▲" : "▼"} {Math.abs(s.changePct30d)}% <span className="text-muted-foreground">30d</span>
-            </div>
-          </div>
-        </div>
+        </Panel>
 
         {/* chart */}
-        <div className="screen-line-bottom px-2 py-2">
-          <CandleChart candles={t.candles} volume={t.volume} />
-        </div>
+        <Panel>
+          <PanelHeader className="flex items-center justify-between">
+            <PanelTitle>Velocity · 52w</PanelTitle>
+            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">commits / wk</span>
+          </PanelHeader>
+          <div className="px-2 py-2">
+            <CandleChart candles={t.candles} volume={t.volume} />
+          </div>
+          <div className="screen-line-top flex justify-end px-4 py-3">
+            <ShareButton handle={t.handle} symbol={t.symbol} change={s.changePct30d} />
+          </div>
+        </Panel>
 
-        {/* share */}
-        <div className="screen-line-bottom flex justify-end px-4 py-3">
-          <ShareButton handle={t.handle} symbol={t.symbol} change={s.changePct30d} />
-        </div>
+        {/* snapshot */}
+        <Panel>
+          <PanelHeader>
+            <PanelTitle>Snapshot</PanelTitle>
+          </PanelHeader>
+          <div className="grid grid-cols-2 gap-px bg-line sm:grid-cols-4">
+            {stats.map((st) => (
+              <StatCell key={st.label} label={st.label} value={st.value} accent={st.accent} />
+            ))}
+          </div>
+        </Panel>
 
-        {/* stats */}
-        <div className="screen-line-bottom flex flex-wrap gap-y-4 px-4 py-4">
-          <Stat label="Mkt Cap" value={`$${(s.marketCap / 1000).toFixed(1)}K`} />
-          <Stat label="Commits 52w" value={s.totalLastYear.toLocaleString()} />
-          <Stat label="Peak Week" value={`${s.peakWeek}`} />
-          {t.kind === "user" ? (
-            <>
-              <Stat label="Streak" value={`${s.currentStreakDays}d`} accent={s.currentStreakDays > 0 ? "text-success" : undefined} />
-              <Stat label="Followers" value={s.followers.toLocaleString()} />
-            </>
-          ) : (
-            <Stat label="Stars" value={s.followers.toLocaleString()} />
-          )}
-          <Stat label="30d" value={`${up ? "+" : ""}${s.changePct30d}%`} accent={changeColor} />
-        </div>
+        {/* activity heatmap */}
+        <Panel>
+          <PanelHeader>
+            <PanelTitle>Activity · last year</PanelTitle>
+          </PanelHeader>
+          <PanelContent>
+            <ActivityHeatmap days={t.days} />
+          </PanelContent>
+        </Panel>
 
-        {/* analyst blurb */}
-        <div className="screen-line-bottom px-4 py-4">
-          <div className="mb-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">Analyst note</div>
-          <p className="font-mono text-sm leading-relaxed text-foreground/80">{analystBlurb(t)}</p>
-        </div>
+        {/* analyst */}
+        <Panel>
+          <PanelHeader>
+            <PanelTitle>Analyst note</PanelTitle>
+          </PanelHeader>
+          <PanelContent>
+            <p className="font-mono text-sm leading-relaxed text-foreground/80">{analystBlurb(t)}</p>
+          </PanelContent>
+        </Panel>
 
-        <div className="px-4 py-6 text-center">
+        <div className="border-x border-line px-4 py-6 text-center">
           <Link href="/" className="font-mono text-xs text-muted-foreground hover:text-foreground">
             ← list another ticker
           </Link>
