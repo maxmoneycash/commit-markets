@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PriceChart from "@/components/PriceChart";
 import { PanelHeader, PanelTitle } from "@/components/panel";
 import type { Day } from "@/lib/github";
@@ -26,26 +26,44 @@ export function ChartSection({
   const [data, setData] = useState<Data>(initial);
   const [loading, setLoading] = useState(false);
   const cache = useRef<Record<string, Data>>({ "1y": initial });
+  const inflight = useRef<Record<string, Promise<Data | null>>>({});
+
+  function load(r: R): Promise<Data | null> {
+    if (cache.current[r]) return Promise.resolve(cache.current[r]);
+    if (inflight.current[r]) return inflight.current[r];
+    const p = fetch(`/api/chart?handle=${encodeURIComponent(handle)}&range=${r}`)
+      .then((res) => (res.ok ? (res.json() as Promise<Data>) : null))
+      .then((d) => {
+        if (d) cache.current[r] = d;
+        return d;
+      })
+      .catch(() => null)
+      .finally(() => {
+        delete inflight.current[r];
+      });
+    inflight.current[r] = p;
+    return p;
+  }
+
+  // warm the other ranges in the background so switching feels instant
+  useEffect(() => {
+    if (kind !== "user") return;
+    load("1m");
+    load("max");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handle, kind]);
 
   async function pick(r: R) {
     if (r === range || kind !== "user") return;
     setRange(r);
-    const cached = cache.current[r];
-    if (cached) {
-      setData(cached);
+    if (cache.current[r]) {
+      setData(cache.current[r]);
       return;
     }
     setLoading(true);
-    try {
-      const res = await fetch(`/api/chart?handle=${encodeURIComponent(handle)}&range=${r}`);
-      if (res.ok) {
-        const d: Data = await res.json();
-        cache.current[r] = d;
-        setData(d);
-      }
-    } finally {
-      setLoading(false);
-    }
+    const d = await load(r); // reuses an in-flight prefetch if there is one
+    if (d) setData(d);
+    setLoading(false);
   }
 
   const label = RANGES.find((x) => x.v === range)?.l ?? "1Y";

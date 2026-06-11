@@ -43,7 +43,7 @@ export default function PriceChart({
   // continuously instead of pinning to synthetic spikes).
   // bucket to keep candles ~5px wide (fewer, cleaner candles; long timeframes
   // bucket more so they stay readable)
-  const maxCandles = Math.max(24, Math.floor(innerW / 5));
+  const maxCandles = Math.max(16, Math.floor(innerW / 8));
   const B = Math.max(1, Math.ceil(N / maxCandles));
   type C = { i: number; open: number; close: number; high: number; low: number; vol: number };
   const candles: C[] = [];
@@ -68,7 +68,7 @@ export default function PriceChart({
 
   const nC = candles.length;
   const slot = nC ? innerW / nC : 0;
-  const bodyW = Math.max(1, slot - 1); // 1px gap between candles
+  const bodyW = Math.max(1.5, slot * 0.7); // ~30% gap between candles
   const xCandle = (b: number) => b * slot + slot / 2;
   const xDay = (i: number) => (N > 1 ? (i / (N - 1)) * innerW : 0);
 

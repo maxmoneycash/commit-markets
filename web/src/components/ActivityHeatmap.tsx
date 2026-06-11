@@ -32,7 +32,7 @@ function level(commits: number): number {
 const BLOCK = 12;
 const MARGIN = 4;
 const STEP = BLOCK + MARGIN;
-const RADIUS = 2;
+const RADIUS = 0; // sharp corners (matches the reference)
 const LABEL_H = 22;
 const FONT = 13;
 
@@ -115,7 +115,7 @@ export function ActivityHeatmap({ days }: { days: Day[] }) {
         <div className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
           <span>Less</span>
           {BG.map((c, i) => (
-            <span key={i} className={`size-[10px] rounded-[2px] ${c}`} />
+            <span key={i} className={`size-[10px] ${c}`} />
           ))}
           <span>More</span>
         </div>

@@ -154,27 +154,27 @@ export async function getUserTicker(login: string, range: Range = "1y"): Promise
     from.setUTCFullYear(from.getUTCFullYear() - 1);
     windows.push({ from: from.toISOString(), to: to.toISOString() });
   }
-  const aliases = windows
-    .map(
-      (w, k) =>
-        `y${k}: contributionsCollection(from:"${w.from}",to:"${w.to}"){ contributionCalendar{ weeks{ contributionDays{ date contributionCount } } } }`,
-    )
-    .join("\n");
-  const query = `query($login:String!){ user(login:$login){ login name avatarUrl url followers{totalCount} ${aliases} } }`;
-
-  const res = await fetch(GQL, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ query, variables: { login } }),
-    next: { revalidate: 3600 },
-  });
-  if (!res.ok) return null;
-  const u = (await res.json())?.data?.user;
+  // Fetch each year window as its own request IN PARALLEL — one combined query
+  // with N aliased windows serializes server-side and is very slow for MAX.
+  async function fetchWindow(w: { from: string; to: string }, withMeta: boolean) {
+    const meta = withMeta ? "login name avatarUrl url followers{totalCount}" : "";
+    const query = `query($login:String!){ user(login:$login){ ${meta} contributionsCollection(from:"${w.from}",to:"${w.to}"){ contributionCalendar{ weeks{ contributionDays{ date contributionCount } } } } } }`;
+    const res = await fetch(GQL, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ query, variables: { login } }),
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return null;
+    return (await res.json())?.data?.user ?? null;
+  }
+  const results = await Promise.all(windows.map((w, k) => fetchWindow(w, k === 0)));
+  const u = results[0];
   if (!u) return null;
 
   const byDate = new Map<string, number>();
-  for (let k = 0; k < yearsToFetch; k++) {
-    const col = u[`y${k}`];
+  for (const r of results) {
+    const col = r?.contributionsCollection;
     if (!col) continue;
     for (const w of col.contributionCalendar.weeks) {
       for (const d of w.contributionDays) byDate.set(d.date, d.contributionCount);
