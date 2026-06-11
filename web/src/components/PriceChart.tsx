@@ -36,37 +36,35 @@ export default function PriceChart({
   const innerW = Math.max(0, w - padR);
   const N = days.length;
 
-  // y-domain from the daily series (candles fall within it)
-  const hi = Math.max(1, ...priceDaily);
-  const lo = Math.min(0, ...priceDaily);
-  const padv = (hi - lo) * 0.06 || 1;
-  const dMax = hi + padv;
-  const dMin = Math.max(0, lo - padv);
+  // Daily candles built from multiple facets of the activity:
+  //   body  = velocity trend (open=prior close, close=today's momentum)
+  //   upper wick = BURST: how far the day's raw count spiked above the trend
+  //   lower wick = cooling when the day fell below the trend
+  // (raw count enters in the same *100 scale as the momentum series)
+  type C = { i: number; open: number; close: number; high: number; low: number; vol: number };
+  const candles: C[] = [];
+  for (let i = 0; i < N; i++) {
+    const open = priceDaily[i - 1] ?? priceDaily[i] ?? 0;
+    const close = priceDaily[i] ?? 0;
+    const spike = (days[i]?.commits ?? 0) * 100; // raw magnitude in price units
+    const bodyHi = Math.max(open, close);
+    const bodyLo = Math.min(open, close);
+    const high = bodyHi + 0.5 * Math.max(0, spike - bodyHi); // burst above trend
+    const low = Math.max(0, bodyLo - 0.45 * Math.max(0, bodyLo - spike)); // cooling below trend
+    candles.push({ i, open, close, high, low, vol: days[i]?.commits ?? 0 });
+  }
+
+  // y-domain covers the line AND candle wicks
+  const seriesHi = mode === "candles" ? Math.max(1, ...candles.map((c) => c.high)) : Math.max(1, ...priceDaily);
+  const seriesLo = 0;
+  const padv = (seriesHi - seriesLo) * 0.06 || 1;
+  const dMax = seriesHi + padv;
+  const dMin = seriesLo;
   const yP = (v: number) => padT + priceH * (1 - (v - dMin) / (dMax - dMin || 1));
 
-  // candle bucketing -> aim for ~5px candles
-  const targetCandles = Math.max(8, Math.floor(innerW / 6));
-  const B = Math.max(1, Math.round(N / targetCandles));
-  type C = { i0: number; open: number; close: number; high: number; low: number; vol: number };
-  const candles: C[] = [];
-  for (let i = 0; i < N; i += B) {
-    const seg = priceDaily.slice(i, i + B);
-    if (!seg.length) continue;
-    const open = priceDaily[i - 1] ?? seg[0];
-    const close = seg[seg.length - 1];
-    candles.push({
-      i0: i,
-      open,
-      close,
-      high: Math.max(open, ...seg),
-      low: Math.min(open, ...seg),
-      vol: days.slice(i, i + B).reduce((s, d) => s + d.commits, 0),
-    });
-  }
-  const nC = candles.length;
-  const slot = nC ? innerW / nC : 0;
-  const bodyW = Math.max(1.5, slot - 1);
-  const xCandle = (b: number) => b * slot + slot / 2;
+  const slot = N ? innerW / N : 0;
+  const bodyW = Math.max(1, slot - 0.4); // thin, dense daily candles
+  const xCandle = (i: number) => i * slot + slot / 2;
   const xDay = (i: number) => (N > 1 ? (i / (N - 1)) * innerW : 0);
 
   // volume scaling per mode
@@ -84,7 +82,7 @@ export default function PriceChart({
     if (m !== lastMonth) {
       lastMonth = m;
       const dt = new Date(d.date + "T00:00:00Z");
-      const x = mode === "candles" ? xCandle(Math.floor(i / B)) : xDay(i);
+      const x = mode === "candles" ? xCandle(i) : xDay(i);
       monthLabels.push({ x, label: dt.toLocaleString("en", { month: "short", timeZone: "UTC" }) });
     }
   });
