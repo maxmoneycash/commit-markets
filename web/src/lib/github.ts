@@ -27,7 +27,8 @@ export type Ticker = {
   url: string;
   candles: Candle[];
   volume: VolumeBar[];
-  days: Day[]; // daily commit counts (for the activity heatmap)
+  days: Day[]; // daily commit counts for the chart range
+  daysYear: Day[]; // last ~year, Sunday-aligned (for the contribution graph)
   priceDaily: number[]; // daily EWMA momentum, aligned with days (for the chart)
   stats: {
     price: number; // latest momentum value (cosmetic "$")
@@ -190,6 +191,9 @@ export async function getUserTicker(login: string, range: Range = "1y"): Promise
 
   // snapshot stats are always last 52w (stable, independent of chart range)
   const snap = allDays.slice(-364);
+  // contribution graph: last ~year, sliced on a Sunday boundary (allDays[0] is a Sunday)
+  const totalWeeks = Math.floor(allDays.length / 7);
+  const daysYear = allDays.slice(Math.max(0, totalWeeks - 52) * 7);
   const { candles, volume } = toWeekly(days); // for the OG card sparkline
   const snapWeekly = toWeekly(snap);
   const ds = dayStats(snap);
@@ -215,6 +219,7 @@ export async function getUserTicker(login: string, range: Range = "1y"): Promise
     candles,
     volume,
     days,
+    daysYear,
     priceDaily,
     stats: {
       price: last,
@@ -292,6 +297,7 @@ export async function getRepoTicker(
     candles,
     volume,
     days,
+    daysYear: days,
     priceDaily,
     stats: {
       price: last,

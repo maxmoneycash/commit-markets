@@ -3,6 +3,7 @@ import PriceChart from "@/components/PriceChart";
 import ShareButton from "@/components/ShareButton";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { RangeBar } from "@/components/RangeBar";
+import { HatchSeparator } from "@/components/HatchSeparator";
 import { Panel, PanelHeader, PanelTitle, PanelContent } from "@/components/panel";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -156,6 +157,8 @@ export default async function Page({
           </div>
         </Panel>
 
+        <HatchSeparator />
+
         {/* snapshot */}
         <Panel>
           <PanelHeader>
@@ -168,15 +171,19 @@ export default async function Page({
           </div>
         </Panel>
 
+        <HatchSeparator />
+
         {/* activity heatmap */}
         <Panel>
           <PanelHeader>
             <PanelTitle>Activity · last year</PanelTitle>
           </PanelHeader>
           <PanelContent>
-            <ActivityHeatmap days={t.days} />
+            <ActivityHeatmap days={t.daysYear} />
           </PanelContent>
         </Panel>
+
+        <HatchSeparator />
 
         {/* analyst */}
         <Panel>
