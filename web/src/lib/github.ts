@@ -120,19 +120,27 @@ function pct(now: number, then: number): number {
   return +(((now - then) / then) * 100).toFixed(1);
 }
 
-export async function getUserTicker(login: string): Promise<Ticker | null> {
-  const query = `query($login:String!){
-    user(login:$login){
-      login name avatarUrl url
-      followers{totalCount}
-      contributionsCollection{
-        contributionCalendar{
-          totalContributions
-          weeks{ contributionDays{ date contributionCount } }
-        }
-      }
-    }
-  }`;
+export async function getUserTicker(login: string, years = 1): Promise<Ticker | null> {
+  years = Math.min(3, Math.max(1, Math.floor(years)));
+  // The contributions API caps each query at 1 year, so request one aliased
+  // window per year and merge.
+  const now = new Date();
+  const windows: { from: string; to: string }[] = [];
+  for (let k = 0; k < years; k++) {
+    const to = new Date(now);
+    to.setUTCFullYear(to.getUTCFullYear() - k);
+    const from = new Date(to);
+    from.setUTCFullYear(from.getUTCFullYear() - 1);
+    windows.push({ from: from.toISOString(), to: to.toISOString() });
+  }
+  const aliases = windows
+    .map(
+      (w, k) =>
+        `y${k}: contributionsCollection(from:"${w.from}",to:"${w.to}"){ contributionCalendar{ weeks{ contributionDays{ date contributionCount } } } }`,
+    )
+    .join("\n");
+  const query = `query($login:String!){ user(login:$login){ login name avatarUrl url followers{totalCount} ${aliases} } }`;
+
   const res = await fetch(GQL, {
     method: "POST",
     headers: {
@@ -147,13 +155,19 @@ export async function getUserTicker(login: string): Promise<Ticker | null> {
   const u = json?.data?.user;
   if (!u) return null;
 
-  const days: { date: string; commits: number }[] = [];
-  for (const w of u.contributionsCollection.contributionCalendar.weeks) {
-    for (const d of w.contributionDays) {
-      days.push({ date: d.date, commits: d.contributionCount });
+  const byDate = new Map<string, number>();
+  for (let k = 0; k < years; k++) {
+    const col = u[`y${k}`];
+    if (!col) continue;
+    for (const w of col.contributionCalendar.weeks) {
+      for (const d of w.contributionDays) byDate.set(d.date, d.contributionCount);
     }
   }
-  const { candles, volume, price } = toWeekly(days);
+  const days: { date: string; commits: number }[] = Array.from(byDate, ([date, commits]) => ({ date, commits })).sort((a, b) =>
+    a.date < b.date ? -1 : 1,
+  );
+  const { candles, volume } = toWeekly(days);
+  const price = momentum(days.map((d) => d.commits));
 
   // current streak (consecutive days ending today with >0)
   let streak = 0;
@@ -162,7 +176,7 @@ export async function getUserTicker(login: string): Promise<Ticker | null> {
     else break;
   }
 
-  const total = u.contributionsCollection.contributionCalendar.totalContributions;
+  const total = days.slice(-364).reduce((sum, d) => sum + d.commits, 0);
   const followers = u.followers.totalCount;
   const last = price[price.length - 1] ?? 0;
   const monthAgo = price[Math.max(0, price.length - 30)] ?? last;

@@ -9,10 +9,16 @@ import type { Metadata } from "next";
 
 export const revalidate = 3600;
 
-async function resolve(slug: string[]): Promise<Ticker | null> {
+async function resolve(slug: string[], years = 1): Promise<Ticker | null> {
   if (slug.length >= 2) return getRepoTicker(slug[0], slug.slice(1).join("/"));
-  return getUserTicker(slug[0]);
+  return getUserTicker(slug[0], years);
 }
+
+const RANGES: { v: string; label: string; years: number }[] = [
+  { v: "1y", label: "1Y", years: 1 },
+  { v: "2y", label: "2Y", years: 2 },
+  { v: "3y", label: "3Y", years: 3 },
+];
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -39,9 +45,17 @@ function StatCell({ label, value, accent }: { label: string; value: string; acce
   );
 }
 
-export default async function Page({ params }: { params: Promise<{ slug: string[] }> }) {
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string[] }>;
+  searchParams: Promise<{ range?: string }>;
+}) {
   const { slug } = await params;
-  const t = await resolve(slug);
+  const sp = await searchParams;
+  const range = RANGES.find((r) => r.v === sp.range) ?? RANGES[0];
+  const t = await resolve(slug, range.years);
   if (!t) notFound();
 
   const s = t.stats;
@@ -100,8 +114,25 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
         {/* chart */}
         <Panel>
           <PanelHeader className="flex items-center justify-between">
-            <PanelTitle>Velocity · 52w</PanelTitle>
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">commits / wk</span>
+            <PanelTitle>Velocity · {range.label}</PanelTitle>
+            {t.kind === "user" ? (
+              <div className="flex gap-0.5 rounded-md border border-line p-0.5">
+                {RANGES.map((r) => (
+                  <Link
+                    key={r.v}
+                    href={`/${t.handle}?range=${r.v}`}
+                    scroll={false}
+                    className={`rounded px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
+                      r.v === range.v ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {r.label}
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">52W</span>
+            )}
           </PanelHeader>
           <div className="px-2 py-2">
             <PriceChart days={t.days} priceDaily={t.priceDaily} />
