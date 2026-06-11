@@ -1,5 +1,5 @@
 import { getUserTicker, getRepoTicker, analystBlurb, type Ticker } from "@/lib/github";
-import PriceChart from "@/components/PriceChart";
+import { ChartSection } from "@/components/ChartSection";
 import ShareButton from "@/components/ShareButton";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { RangeBar } from "@/components/RangeBar";
@@ -11,16 +11,9 @@ import type { Metadata } from "next";
 
 export const revalidate = 3600;
 
-const RANGES: { v: "1m" | "1y" | "max"; label: string }[] = [
-  { v: "1m", label: "1M" },
-  { v: "1y", label: "1Y" },
-  { v: "max", label: "MAX" },
-];
-const DEFAULT_RANGE = RANGES[1]; // 1Y
-
-async function resolve(slug: string[], range: "1m" | "1y" | "max" = "1y"): Promise<Ticker | null> {
+async function resolve(slug: string[]): Promise<Ticker | null> {
   if (slug.length >= 2) return getRepoTicker(slug[0], slug.slice(1).join("/"));
-  return getUserTicker(slug[0], range);
+  return getUserTicker(slug[0], "1y");
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
@@ -48,17 +41,9 @@ function StatCell({ label, value, accent }: { label: string; value: string; acce
   );
 }
 
-export default async function Page({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ slug: string[] }>;
-  searchParams: Promise<{ range?: string }>;
-}) {
+export default async function Page({ params }: { params: Promise<{ slug: string[] }> }) {
   const { slug } = await params;
-  const sp = await searchParams;
-  const range = RANGES.find((r) => r.v === sp.range) ?? DEFAULT_RANGE;
-  const t = await resolve(slug, range.v);
+  const t = await resolve(slug);
   if (!t) notFound();
 
   const s = t.stats;
@@ -122,36 +107,13 @@ export default async function Page({
             </div>
           </div>
           <div className="screen-line-top px-4 py-3">
-            <RangeBar low={rangeLow} high={rangeHigh} current={s.price} label={range.label} />
+            <RangeBar low={rangeLow} high={rangeHigh} current={s.price} label="1Y" />
           </div>
         </Panel>
 
         {/* chart */}
         <Panel>
-          <PanelHeader className="flex items-center justify-between">
-            <PanelTitle>Velocity · {range.label}</PanelTitle>
-            {t.kind === "user" ? (
-              <div className="flex gap-0.5 rounded-md border border-line p-0.5">
-                {RANGES.map((r) => (
-                  <Link
-                    key={r.v}
-                    href={`/${t.handle}?range=${r.v}`}
-                    scroll={false}
-                    className={`rounded px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
-                      r.v === range.v ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {r.label}
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">52W</span>
-            )}
-          </PanelHeader>
-          <div className="px-2 py-2">
-            <PriceChart days={t.days} priceDaily={t.priceDaily} />
-          </div>
+          <ChartSection handle={t.handle} kind={t.kind} initial={{ days: t.days, priceDaily: t.priceDaily }} />
           <div className="screen-line-top flex justify-end px-4 py-3">
             <ShareButton handle={t.handle} symbol={t.symbol} change={s.changePct30d} />
           </div>
