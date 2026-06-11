@@ -310,6 +310,38 @@ export async function getRepoTicker(
   };
 }
 
+// Compact card data for the discovery board.
+export type UserSummary = {
+  handle: string;
+  symbol: string;
+  name: string;
+  avatarUrl: string | null;
+  spark: number[]; // downsampled momentum line
+  price: number;
+  changePct30d: number;
+  totalLastYear: number;
+};
+
+export async function getUserSummary(login: string): Promise<UserSummary | null> {
+  const t = await getUserTicker(login, "1y");
+  if (!t) return null;
+  const p = t.priceDaily;
+  const step = Math.max(1, Math.ceil(p.length / 48));
+  const spark: number[] = [];
+  for (let i = 0; i < p.length; i += step) spark.push(p[i]);
+  if (spark[spark.length - 1] !== p[p.length - 1]) spark.push(p[p.length - 1]);
+  return {
+    handle: t.handle,
+    symbol: t.symbol,
+    name: t.name,
+    avatarUrl: t.avatarUrl,
+    spark,
+    price: t.stats.price,
+    changePct30d: t.stats.changePct30d,
+    totalLastYear: t.stats.totalLastYear,
+  };
+}
+
 // Templated analyst blurb from stats (Claude upgrade later).
 export function analystBlurb(t: Ticker): string {
   const s = t.stats;
