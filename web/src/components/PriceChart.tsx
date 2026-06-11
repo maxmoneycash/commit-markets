@@ -38,11 +38,9 @@ export default function PriceChart({
   const innerW = Math.max(0, w - padR);
   const N = days.length;
 
-  // Daily candles built from multiple facets of the activity:
-  //   body  = velocity trend (open=prior close, close=today's momentum)
-  //   upper wick = BURST: how far the day's raw count spiked above the trend
-  //   lower wick = cooling when the day fell below the trend
-  // (raw count enters in the same *100 scale as the momentum series)
+  // Candles are pure OHLC samples of the momentum line itself — the line is
+  // the price, candles wrap around it (open = prior close, so bodies chain
+  // continuously instead of pinning to synthetic spikes).
   // bucket to keep candles ~5px wide (fewer, cleaner candles; long timeframes
   // bucket more so they stay readable)
   const maxCandles = Math.max(24, Math.floor(innerW / 5));
@@ -55,25 +53,22 @@ export default function PriceChart({
     if (!seg.length) continue;
     const open = priceDaily[i - 1] ?? seg[0];
     const close = seg[seg.length - 1];
-    const trendHi = Math.max(open, ...seg);
-    const trendLo = Math.min(open, ...seg);
-    const spike = Math.max(0, ...segDays.map((d) => d.commits)) * 100; // burst magnitude
-    const high = trendHi + 0.5 * Math.max(0, spike - trendHi); // burst above trend
-    const low = Math.max(0, trendLo - 0.45 * Math.max(0, trendLo - spike)); // cooling below trend
+    const high = Math.max(open, ...seg);
+    const low = Math.min(open, ...seg);
     candles.push({ i, open, close, high, low, vol: segDays.reduce((s, d) => s + d.commits, 0) });
   }
 
-  // y-domain covers the line AND candle wicks
+  // y-domain fits the data top AND bottom (no dead space below quiet periods)
   const seriesHi = mode === "candles" ? Math.max(1, ...candles.map((c) => c.high)) : Math.max(1, ...priceDaily);
-  const seriesLo = 0;
+  const seriesLo = mode === "candles" ? Math.min(...candles.map((c) => c.low)) : Math.min(...priceDaily);
   const padv = (seriesHi - seriesLo) * 0.06 || 1;
   const dMax = seriesHi + padv;
-  const dMin = seriesLo;
+  const dMin = Math.max(0, seriesLo - padv);
   const yP = (v: number) => padT + priceH * (1 - (v - dMin) / (dMax - dMin || 1));
 
   const nC = candles.length;
   const slot = nC ? innerW / nC : 0;
-  const bodyW = Math.max(1, slot - 0.4); // thin, dense candles
+  const bodyW = Math.max(1, slot - 1); // 1px gap between candles
   const xCandle = (b: number) => b * slot + slot / 2;
   const xDay = (i: number) => (N > 1 ? (i / (N - 1)) * innerW : 0);
 
@@ -178,7 +173,18 @@ export default function PriceChart({
                 <path d={linePath} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" />
               </g>
             ) : (
-              candles.map((c, b) => {
+              <>
+                {/* the momentum line the candles are sampled from, faint behind them */}
+                <path
+                  d={linePath}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1}
+                  strokeLinejoin="round"
+                  opacity={0.25}
+                  className={periodUp ? "text-success" : "text-destructive"}
+                />
+                {candles.map((c, b) => {
                 const up = c.close >= c.open;
                 const cls = up ? "fill-success stroke-success" : "fill-destructive stroke-destructive";
                 const x = xCandle(b);
@@ -190,7 +196,8 @@ export default function PriceChart({
                     <rect x={x - bodyW / 2} y={top} width={bodyW} height={h} rx={0.5} />
                   </g>
                 );
-              })
+                })}
+              </>
             )}
 
             {/* volume lane */}
