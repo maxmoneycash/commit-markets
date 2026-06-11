@@ -1,5 +1,5 @@
 import { getUserTicker, getRepoTicker, analystBlurb, type Ticker } from "@/lib/github";
-import CandleChart from "@/components/CandleChart";
+import PriceChart from "@/components/PriceChart";
 import ShareButton from "@/components/ShareButton";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { Panel, PanelHeader, PanelTitle, PanelContent } from "@/components/panel";
@@ -104,7 +104,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
             <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">commits / wk</span>
           </PanelHeader>
           <div className="px-2 py-2">
-            <CandleChart candles={t.candles} volume={t.volume} />
+            <PriceChart candles={t.candles} volume={t.volume} />
           </div>
           <div className="screen-line-top flex justify-end px-4 py-3">
             <ShareButton handle={t.handle} symbol={t.symbol} change={s.changePct30d} />
