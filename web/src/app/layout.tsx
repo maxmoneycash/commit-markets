@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn(fontVariables, "h-full")} suppressHydrationWarning>
-      <body className="min-h-full font-sans antialiased">
+      <body className="min-h-full max-w-[100vw] overflow-x-clip font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <SiteHeader />
           {children}

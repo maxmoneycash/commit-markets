@@ -22,6 +22,7 @@ export default function PriceChart({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    setW(el.getBoundingClientRect().width); // measure immediately (no first-paint overflow)
     const ro = new ResizeObserver((e) => setW(e[0].contentRect.width));
     ro.observe(el);
     return () => ro.disconnect();
@@ -138,7 +139,7 @@ export default function PriceChart({
           if (r) setHoverPx(e.clientX - r.left);
         }}
         onMouseLeave={() => setHoverPx(null)}
-        className="cm-dotbg relative w-full"
+        className="cm-dotbg relative w-full overflow-hidden"
         style={{ height: H }}
       >
         {hover && (

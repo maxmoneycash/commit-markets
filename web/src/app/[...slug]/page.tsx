@@ -2,6 +2,7 @@ import { getUserTicker, getRepoTicker, analystBlurb, type Ticker } from "@/lib/g
 import PriceChart from "@/components/PriceChart";
 import ShareButton from "@/components/ShareButton";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
+import { RangeBar } from "@/components/RangeBar";
 import { Panel, PanelHeader, PanelTitle, PanelContent } from "@/components/panel";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -62,6 +63,15 @@ export default async function Page({
   const s = t.stats;
   const up = s.changePct30d >= 0;
   const changeColor = up ? "text-success" : "text-destructive";
+  const rangeLow = Math.min(...t.priceDaily);
+  const rangeHigh = Math.max(...t.priceDaily);
+  const verdict = s.changePct30d > 25 ? "bullish" : s.changePct30d < -25 ? "bearish" : "neutral";
+  const verdictCls =
+    verdict === "bullish"
+      ? "border-success/30 bg-success/10 text-success"
+      : verdict === "bearish"
+        ? "border-destructive/30 bg-destructive/10 text-destructive"
+        : "border-line text-muted-foreground";
 
   const stats: { label: string; value: string; accent?: string }[] = [
     { label: "Mkt Cap", value: `$${(s.marketCap / 1000).toFixed(1)}K` },
@@ -83,32 +93,35 @@ export default async function Page({
       <div className="mx-auto max-w-3xl">
         {/* hero header */}
         <Panel>
-          <div className="flex items-start justify-between gap-4 px-4 py-5">
-            <div className="flex items-center gap-4">
+          <div className="flex items-start justify-between gap-3 px-4 py-5 sm:gap-4">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
               {t.avatarUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={t.avatarUrl} alt="" className="size-14 rounded-md border border-line" />
+                <img src={t.avatarUrl} alt="" className="size-11 shrink-0 rounded-md border border-line sm:size-14" />
               )}
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="font-mono text-2xl font-bold tracking-tight text-foreground">{t.symbol}</h1>
-                  <span className="rounded border border-line px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <h1 className="truncate font-mono text-lg font-bold tracking-tight text-foreground sm:text-2xl">{t.symbol}</h1>
+                  <span className="hidden shrink-0 rounded border border-line px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground sm:inline">
                     {t.kind}
                   </span>
                 </div>
-                <a href={t.url} target="_blank" className="font-mono text-sm text-muted-foreground hover:text-foreground">
+                <a href={t.url} target="_blank" className="block truncate font-mono text-xs text-muted-foreground hover:text-foreground sm:text-sm">
                   {t.handle}
                 </a>
               </div>
             </div>
-            <div className="text-right">
-              <div className="font-mono text-3xl font-bold tabular-nums text-foreground">
+            <div className="shrink-0 text-right">
+              <div className="font-mono text-2xl font-bold tabular-nums text-foreground sm:text-3xl">
                 {s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
-              <div className={`font-mono text-sm tabular-nums ${changeColor}`}>
+              <div className={`font-mono text-xs tabular-nums sm:text-sm ${changeColor}`}>
                 {up ? "▲" : "▼"} {Math.abs(s.changePct30d)}% <span className="text-muted-foreground">30d</span>
               </div>
             </div>
+          </div>
+          <div className="screen-line-top px-4 py-3">
+            <RangeBar low={rangeLow} high={rangeHigh} current={s.price} label={range.label} />
           </div>
         </Panel>
 
@@ -167,8 +180,11 @@ export default async function Page({
 
         {/* analyst */}
         <Panel>
-          <PanelHeader>
+          <PanelHeader className="flex items-center justify-between">
             <PanelTitle>Analyst note</PanelTitle>
+            <span className={`rounded border px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider ${verdictCls}`}>
+              {verdict}
+            </span>
           </PanelHeader>
           <PanelContent>
             <p className="font-mono text-sm leading-relaxed text-foreground/80">{analystBlurb(t)}</p>
