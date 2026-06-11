@@ -120,13 +120,33 @@ function pct(now: number, then: number): number {
   return +(((now - then) / then) * 100).toFixed(1);
 }
 
-export async function getUserTicker(login: string, years = 1): Promise<Ticker | null> {
-  years = Math.min(3, Math.max(1, Math.floor(years)));
-  // The contributions API caps each query at 1 year, so request one aliased
-  // window per year and merge.
+export type Range = "1m" | "1y" | "max";
+
+export async function getUserTicker(login: string, range: Range = "1y"): Promise<Ticker | null> {
+  const headers = { Authorization: `Bearer ${token()}`, "Content-Type": "application/json" };
+
+  // How many yearly windows to fetch (the contributions API caps at 1yr/query).
+  let yearsToFetch = 1;
+  if (range === "max") {
+    const cr = await fetch(GQL, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ query: `query($login:String!){user(login:$login){createdAt}}`, variables: { login } }),
+      next: { revalidate: 86400 },
+    });
+    if (cr.ok) {
+      const created = (await cr.json())?.data?.user?.createdAt;
+      if (created) {
+        const cy = new Date(created).getUTCFullYear();
+        const ny = new Date().getUTCFullYear();
+        yearsToFetch = Math.min(16, Math.max(1, ny - cy + 1));
+      }
+    }
+  }
+
   const now = new Date();
   const windows: { from: string; to: string }[] = [];
-  for (let k = 0; k < years; k++) {
+  for (let k = 0; k < yearsToFetch; k++) {
     const to = new Date(now);
     to.setUTCFullYear(to.getUTCFullYear() - k);
     const from = new Date(to);
@@ -143,45 +163,47 @@ export async function getUserTicker(login: string, years = 1): Promise<Ticker | 
 
   const res = await fetch(GQL, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token()}`,
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify({ query, variables: { login } }),
     next: { revalidate: 3600 },
   });
   if (!res.ok) return null;
-  const json = await res.json();
-  const u = json?.data?.user;
+  const u = (await res.json())?.data?.user;
   if (!u) return null;
 
   const byDate = new Map<string, number>();
-  for (let k = 0; k < years; k++) {
+  for (let k = 0; k < yearsToFetch; k++) {
     const col = u[`y${k}`];
     if (!col) continue;
     for (const w of col.contributionCalendar.weeks) {
       for (const d of w.contributionDays) byDate.set(d.date, d.contributionCount);
     }
   }
-  const days: { date: string; commits: number }[] = Array.from(byDate, ([date, commits]) => ({ date, commits })).sort((a, b) =>
-    a.date < b.date ? -1 : 1,
-  );
-  const { candles, volume } = toWeekly(days);
-  const price = momentum(days.map((d) => d.commits));
+  const allDays: Day[] = Array.from(byDate, ([date, commits]) => ({ date, commits })).sort((a, b) => (a.date < b.date ? -1 : 1));
+  if (!allDays.length) return null;
+  const priceAll = momentum(allDays.map((d) => d.commits));
 
-  // current streak (consecutive days ending today with >0)
+  // chart range slice (momentum keeps full-history warmup)
+  const sliceN = range === "1m" ? 31 : range === "1y" ? 365 : allDays.length;
+  const days = allDays.slice(-sliceN);
+  const priceDaily = priceAll.slice(-sliceN);
+
+  // snapshot stats are always last 52w (stable, independent of chart range)
+  const snap = allDays.slice(-364);
+  const { candles, volume } = toWeekly(days); // for the OG card sparkline
+  const snapWeekly = toWeekly(snap);
+  const ds = dayStats(snap);
+
   let streak = 0;
-  for (let i = days.length - 1; i >= 0; i--) {
-    if (days[i].commits > 0) streak++;
+  for (let i = allDays.length - 1; i >= 0; i--) {
+    if (allDays[i].commits > 0) streak++;
     else break;
   }
 
-  const total = days.slice(-364).reduce((sum, d) => sum + d.commits, 0);
+  const total = snap.reduce((sum, d) => sum + d.commits, 0);
   const followers = u.followers.totalCount;
-  const last = price[price.length - 1] ?? 0;
-  const monthAgo = price[Math.max(0, price.length - 30)] ?? last;
-  const ds = dayStats(days);
-  const priceDaily = momentum(days.map((d) => d.commits));
+  const last = priceAll[priceAll.length - 1] ?? 0;
+  const monthAgo = priceAll[Math.max(0, priceAll.length - 30)] ?? last;
 
   return {
     kind: "user",
@@ -198,7 +220,7 @@ export async function getUserTicker(login: string, years = 1): Promise<Ticker | 
       price: last,
       changePct30d: pct(last, monthAgo),
       totalLastYear: total,
-      peakWeek: Math.max(0, ...volume.map((v) => v.value)),
+      peakWeek: Math.max(0, ...snapWeekly.volume.map((v) => v.value)),
       currentStreakDays: streak,
       longestStreak: ds.longestStreak,
       activeDays: ds.activeDays,

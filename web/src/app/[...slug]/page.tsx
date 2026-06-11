@@ -9,16 +9,17 @@ import type { Metadata } from "next";
 
 export const revalidate = 3600;
 
-async function resolve(slug: string[], years = 1): Promise<Ticker | null> {
-  if (slug.length >= 2) return getRepoTicker(slug[0], slug.slice(1).join("/"));
-  return getUserTicker(slug[0], years);
-}
-
-const RANGES: { v: string; label: string; years: number }[] = [
-  { v: "1y", label: "1Y", years: 1 },
-  { v: "2y", label: "2Y", years: 2 },
-  { v: "3y", label: "3Y", years: 3 },
+const RANGES: { v: "1m" | "1y" | "max"; label: string }[] = [
+  { v: "1m", label: "1M" },
+  { v: "1y", label: "1Y" },
+  { v: "max", label: "MAX" },
 ];
+const DEFAULT_RANGE = RANGES[1]; // 1Y
+
+async function resolve(slug: string[], range: "1m" | "1y" | "max" = "1y"): Promise<Ticker | null> {
+  if (slug.length >= 2) return getRepoTicker(slug[0], slug.slice(1).join("/"));
+  return getUserTicker(slug[0], range);
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -54,8 +55,8 @@ export default async function Page({
 }) {
   const { slug } = await params;
   const sp = await searchParams;
-  const range = RANGES.find((r) => r.v === sp.range) ?? RANGES[0];
-  const t = await resolve(slug, range.years);
+  const range = RANGES.find((r) => r.v === sp.range) ?? DEFAULT_RANGE;
+  const t = await resolve(slug, range.v);
   if (!t) notFound();
 
   const s = t.stats;

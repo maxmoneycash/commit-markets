@@ -42,9 +42,10 @@ export default function PriceChart({
   //   upper wick = BURST: how far the day's raw count spiked above the trend
   //   lower wick = cooling when the day fell below the trend
   // (raw count enters in the same *100 scale as the momentum series)
-  // daily by default; bucket only enough to cap rendered candles (keeps long
-  // timeframes granular without becoming an unrenderable wall)
-  const B = Math.max(1, Math.ceil(N / 520));
+  // bucket to keep candles ~5px wide (fewer, cleaner candles; long timeframes
+  // bucket more so they stay readable)
+  const maxCandles = Math.max(24, Math.floor(innerW / 5));
+  const B = Math.max(1, Math.ceil(N / maxCandles));
   type C = { i: number; open: number; close: number; high: number; low: number; vol: number };
   const candles: C[] = [];
   for (let i = 0; i < N; i += B) {
