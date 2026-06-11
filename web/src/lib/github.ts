@@ -28,6 +28,7 @@ export type Ticker = {
   candles: Candle[];
   volume: VolumeBar[];
   days: Day[]; // daily commit counts (for the activity heatmap)
+  priceDaily: number[]; // daily EWMA momentum, aligned with days (for the chart)
   stats: {
     price: number; // latest momentum value (cosmetic "$")
     changePct30d: number;
@@ -166,6 +167,7 @@ export async function getUserTicker(login: string): Promise<Ticker | null> {
   const last = price[price.length - 1] ?? 0;
   const monthAgo = price[Math.max(0, price.length - 30)] ?? last;
   const ds = dayStats(days);
+  const priceDaily = momentum(days.map((d) => d.commits));
 
   return {
     kind: "user",
@@ -177,6 +179,7 @@ export async function getUserTicker(login: string): Promise<Ticker | null> {
     candles,
     volume,
     days,
+    priceDaily,
     stats: {
       price: last,
       changePct30d: pct(last, monthAgo),
@@ -241,6 +244,7 @@ export async function getRepoTicker(
   const last = price[price.length - 1] ?? 0;
   const monthAgo = price[Math.max(0, price.length - 30)] ?? last;
   const ds = dayStats(days);
+  const priceDaily = momentum(days.map((d) => d.commits));
 
   return {
     kind: "repo",
@@ -252,6 +256,7 @@ export async function getRepoTicker(
     candles,
     volume,
     days,
+    priceDaily,
     stats: {
       price: last,
       changePct30d: pct(last, monthAgo),

@@ -104,7 +104,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
             <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">commits / wk</span>
           </PanelHeader>
           <div className="px-2 py-2">
-            <PriceChart candles={t.candles} volume={t.volume} />
+            <PriceChart days={t.days} priceDaily={t.priceDaily} />
           </div>
           <div className="screen-line-top flex justify-end px-4 py-3">
             <ShareButton handle={t.handle} symbol={t.symbol} change={s.changePct30d} />
