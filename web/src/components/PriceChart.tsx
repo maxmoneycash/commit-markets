@@ -173,18 +173,7 @@ export default function PriceChart({
                 <path d={linePath} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" />
               </g>
             ) : (
-              <>
-                {/* the momentum line the candles are sampled from, faint behind them */}
-                <path
-                  d={linePath}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1}
-                  strokeLinejoin="round"
-                  opacity={0.25}
-                  className={periodUp ? "text-success" : "text-destructive"}
-                />
-                {candles.map((c, b) => {
+              candles.map((c, b) => {
                 const up = c.close >= c.open;
                 const cls = up ? "fill-success stroke-success" : "fill-destructive stroke-destructive";
                 const x = xCandle(b);
@@ -196,8 +185,7 @@ export default function PriceChart({
                     <rect x={x - bodyW / 2} y={top} width={bodyW} height={h} rx={0.5} />
                   </g>
                 );
-                })}
-              </>
+              })
             )}
 
             {/* volume lane */}
