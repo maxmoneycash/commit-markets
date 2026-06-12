@@ -348,6 +348,47 @@ export async function getUserSummary(login: string): Promise<UserSummary | null>
   };
 }
 
+// Recent public events for the /live activity feed.
+export type GhEvent = { verb: string; repo: string; detail: string; at: string };
+
+export async function getUserEvents(login: string): Promise<GhEvent[]> {
+  const res = await fetch(`${REST}/users/${encodeURIComponent(login)}/events/public?per_page=10`, {
+    headers: { Authorization: `Bearer ${token()}`, Accept: "application/vnd.github+json" },
+    next: { revalidate: 120 },
+  });
+  if (!res.ok) return [];
+  type RawEvent = {
+    type: string;
+    repo?: { name?: string };
+    created_at?: string;
+    payload?: { commits?: unknown[]; action?: string; ref_type?: string; ref?: string | null };
+  };
+  const raw: RawEvent[] = await res.json();
+  return raw.slice(0, 8).map((e) => {
+    const repo = e.repo?.name ?? "";
+    const at = e.created_at ?? "";
+    const p = e.payload ?? {};
+    switch (e.type) {
+      case "PushEvent":
+        return { verb: "PUSH", repo, detail: `${p.commits?.length ?? 0} commit${(p.commits?.length ?? 0) === 1 ? "" : "s"}`, at };
+      case "PullRequestEvent":
+        return { verb: "PR", repo, detail: p.action ?? "", at };
+      case "IssuesEvent":
+        return { verb: "ISSUE", repo, detail: p.action ?? "", at };
+      case "WatchEvent":
+        return { verb: "STAR", repo, detail: "starred", at };
+      case "CreateEvent":
+        return { verb: "CREATE", repo, detail: p.ref_type ?? "", at };
+      case "ForkEvent":
+        return { verb: "FORK", repo, detail: "forked", at };
+      case "ReleaseEvent":
+        return { verb: "RELEASE", repo, detail: p.action ?? "", at };
+      default:
+        return { verb: e.type.replace("Event", "").toUpperCase().slice(0, 8), repo, detail: "", at };
+    }
+  });
+}
+
 // Templated analyst blurb from stats (Claude upgrade later).
 export function analystBlurb(t: Ticker): string {
   const s = t.stats;

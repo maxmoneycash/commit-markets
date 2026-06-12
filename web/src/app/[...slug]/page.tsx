@@ -95,9 +95,17 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
                     {t.kind}
                   </span>
                 </div>
-                <a href={t.url} target="_blank" className="block truncate font-mono text-xs text-muted-foreground hover:text-foreground sm:text-sm">
-                  {t.handle}
-                </a>
+                <div className="flex items-center gap-2.5">
+                  <a href={t.url} target="_blank" className="block truncate font-mono text-xs text-muted-foreground hover:text-foreground sm:text-sm">
+                    {t.handle}
+                  </a>
+                  {t.kind === "user" && (
+                    <Link href={`/${t.handle}/live`} className="flex shrink-0 items-center gap-1 rounded border border-success/30 bg-success/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-success hover:bg-success/20">
+                      <span className="size-1 animate-pulse rounded-full bg-success" />
+                      live
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
             <div className="shrink-0 text-right">
