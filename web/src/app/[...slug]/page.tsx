@@ -5,11 +5,14 @@ import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { RangeBar } from "@/components/RangeBar";
 import { HatchSeparator } from "@/components/HatchSeparator";
 import { Panel, PanelHeader, PanelTitle, PanelContent } from "@/components/panel";
+import { CopyButton } from "@/components/CopyButton";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 
 export const revalidate = 3600;
+
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 async function resolve(slug: string[]): Promise<Ticker | null> {
   if (slug.length >= 2) return getRepoTicker(slug[0], slug.slice(1).join("/"));
@@ -159,6 +162,35 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
             <p className="font-mono text-sm leading-relaxed text-foreground/80">{analystBlurb(t)}</p>
           </PanelContent>
         </Panel>
+
+        {t.kind === "user" && (
+          <>
+            <HatchSeparator />
+            <Panel>
+              <PanelHeader className="flex items-center justify-between gap-3">
+                <PanelTitle>Put this on your README</PanelTitle>
+                <CopyButton
+                  text={`[![${t.symbol} on commit-markets](${SITE}/api/badge?handle=${encodeURIComponent(t.handle)}&style=card)](${SITE}/${encodeURIComponent(t.handle)})`}
+                />
+              </PanelHeader>
+              <PanelContent className="flex flex-col items-center gap-4 py-6">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/api/badge?handle=${encodeURIComponent(t.handle)}&style=card`}
+                  alt={`${t.symbol} README badge`}
+                  className="max-w-full"
+                  loading="lazy"
+                />
+                <Link
+                  href={`/badges?handle=${encodeURIComponent(t.handle)}`}
+                  className="font-mono text-xs text-muted-foreground link-underline hover:text-foreground"
+                >
+                  9 more styles → terminal, ticker tape, stonks, receipt…
+                </Link>
+              </PanelContent>
+            </Panel>
+          </>
+        )}
 
         <div className="border-x border-line px-4 py-6 text-center">
           <Link href="/" className="font-mono text-xs text-muted-foreground hover:text-foreground">
