@@ -66,13 +66,13 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
   const stats: { label: string; value: string; accent?: string }[] = [
     { label: "Mkt Cap", value: `$${(s.marketCap / 1000).toFixed(1)}K` },
     { label: "Commits 52w", value: s.totalLastYear.toLocaleString() },
-    { label: "Avg / wk", value: s.avgPerWeek.toString() },
     { label: "Peak week", value: `${s.peakWeek}` },
+    { label: "Busiest day", value: `${s.busiestDay}` },
     { label: "Active days", value: `${s.activeDays}` },
     { label: "Longest streak", value: `${s.longestStreak}d` },
     t.kind === "user"
       ? { label: "Streak", value: `${s.currentStreakDays}d`, accent: s.currentStreakDays > 0 ? "text-success" : undefined }
-      : { label: "Busiest day", value: `${s.busiestDay}` },
+      : { label: "Avg / wk", value: s.avgPerWeek.toString() },
     t.kind === "user"
       ? { label: "Followers", value: s.followers.toLocaleString() }
       : { label: "Stars", value: s.followers.toLocaleString() },
@@ -145,7 +145,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
           </div>
         </Panel>
 
-        {t.kind === "user" && <Fundamentals handle={t.handle} avgPerWeek={s.avgPerWeek} marketCap={s.marketCap} />}
+        {t.kind === "user" && <Fundamentals handle={t.handle} avgPerWeek={s.avgPerWeek} />}
 
         <HatchSeparator />
 

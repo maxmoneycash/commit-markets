@@ -23,11 +23,9 @@ function Cell({ label, value, sub }: { label: string; value: string; sub: string
 export function Fundamentals({
   handle,
   avgPerWeek,
-  marketCap,
 }: {
   handle: string;
   avgPerWeek: number;
-  marketCap: number;
 }) {
   const [feed, setFeed] = useState<Feed | null>(null);
 
@@ -43,7 +41,7 @@ export function Fundamentals({
   const t = feed.tokens;
   const weeklyUsd = t.avg_usd_month != null ? t.avg_usd_month / 4.33 : null;
   const effPer100 = weeklyUsd && weeklyUsd > 0 ? avgPerWeek / (weeklyUsd / 100) : null;
-  const ev = t.avg_usd_month != null ? marketCap + 3 * t.avg_usd_month : null;
+  const costPerCommit = weeklyUsd != null && avgPerWeek > 0 ? weeklyUsd / avgPerWeek : null;
   const fmtTok = (n: number) =>
     n >= 1e9 ? `${(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : `${Math.round(n)}`;
 
@@ -68,9 +66,9 @@ export function Fundamentals({
           sub="commits per $100"
         />
         <Cell
-          label="Enterprise value"
-          value={ev != null ? `$${(ev / 1000).toFixed(1)}K` : "—"}
-          sub="mkt cap + 90d compute"
+          label="Cost / commit"
+          value={costPerCommit != null ? `$${costPerCommit.toFixed(2)}` : "—"}
+          sub="weekly spend ÷ output"
         />
       </div>
     </Panel>
