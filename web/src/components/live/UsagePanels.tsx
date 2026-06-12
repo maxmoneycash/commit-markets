@@ -72,7 +72,7 @@ export function UsageSection({ handle }: { handle: string }) {
             <span>
               Stream your real local stats — tokens by agent, cost, what your machine is running — onto this page.
             </span>
-            <code className="w-fit rounded border border-line bg-muted/30 px-2 py-1 text-foreground/80">
+            <code className="w-fit border border-line bg-muted/30 px-2 py-1 text-foreground/80">
               node tools/cm-agent.mjs {handle} --watch
             </code>
           </div>
@@ -98,9 +98,9 @@ export function UsageSection({ handle }: { handle: string }) {
           {byAgent.slice(0, 6).map((a) => (
             <div key={a.name} className="flex items-center gap-2 font-mono text-[10px]">
               <span className="w-16 shrink-0 uppercase text-muted-foreground">{a.name}</span>
-              <div className="h-2 flex-1 overflow-hidden rounded-sm bg-muted-foreground/10">
+              <div className="h-2 flex-1 overflow-hidden bg-muted-foreground/10">
                 <div
-                  className="h-full rounded-sm"
+                  className="h-full"
                   style={{ width: `${(a.tokens / maxTok) * 100}%`, background: AGENT_COLORS[a.name] ?? "#8b949e" }}
                 />
               </div>
@@ -115,14 +115,14 @@ export function UsageSection({ handle }: { handle: string }) {
           <div className="font-mono text-3xl font-bold text-foreground">
             ${tok?.cost_usd_total != null ? Math.round(tok.cost_usd_total).toLocaleString() : "—"}
           </div>
-          <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+          <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             ALL-TIME · ${tok?.avg_usd_month != null ? Math.round(tok.avg_usd_month).toLocaleString() : "—"}/MO AVG
           </div>
         </div>
         {tok?.cache_hit_rate != null && (
           <>
-            <SegmentBar pct={tok.cache_hit_rate * 100} segments={14} onClass="fill-[#ff9f0a]" className="mt-3" />
-            <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+            <SegmentBar pct={tok.cache_hit_rate * 100} segments={14} onClass="fill-amber" className="mt-3" />
+            <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
               {(tok.cache_hit_rate * 100).toFixed(1)}% CACHE HIT
             </div>
           </>
@@ -142,7 +142,7 @@ export function UsageSection({ handle }: { handle: string }) {
           ))}
         </div>
         {m && (
-          <div className="mt-3 border-t border-line pt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+          <div className="mt-3 border-t border-line pt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             LOAD {m.cpu_load_1m?.toFixed(1) ?? "—"} / {m.cpu_cores ?? "—"} CORES · MEM{" "}
             {m.mem_used_gb?.toFixed(0) ?? "—"}/{m.mem_total_gb?.toFixed(0) ?? "—"}GB
           </div>

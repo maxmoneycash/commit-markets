@@ -19,8 +19,8 @@ function Chrome({
   className?: string;
 }) {
   return (
-    <div className={`flex flex-col rounded-lg border border-line bg-card/40 p-4 ${className}`}>
-      <div className="mb-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+    <div className={`flex flex-col bg-background p-4 ${className}`}>
+      <div className="mb-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
         <span>{label}</span>
         {right}
       </div>
@@ -76,7 +76,7 @@ export function ClockPanel({ compact = false }: { compact?: boolean }) {
             <div className="h-[39px]" />
           )}
         </div>
-        <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+        <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           {day ? `${day.slice(0, 3).toUpperCase()} · ` : ""}{date} · WK {week} · UP {up}
         </div>
       </Chrome>
@@ -100,11 +100,11 @@ export function ClockPanel({ compact = false }: { compact?: boolean }) {
       <div className="flex items-end justify-between">
         <div>
           <div className="font-sans text-xl font-semibold text-foreground">{day}</div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             {date} · WEEK {week}
           </div>
         </div>
-        <div className="text-right font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+        <div className="text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           SYS NOMINAL · ALL CHANNELS
           <br />
           <span className="text-success">GREEN ▪</span>
@@ -148,7 +148,7 @@ export function RenderPanel() {
             <circle
               cx="46" cy="46" r={R} fill="none" strokeWidth="6" strokeLinecap="round"
               strokeDasharray={`${(pct * C).toFixed(1)} ${C.toFixed(1)}`}
-              className={fps >= 50 ? "stroke-success" : fps >= 30 ? "stroke-[#ff9f0a]" : "stroke-destructive"}
+              className={fps >= 50 ? "stroke-success" : fps >= 30 ? "stroke-amber" : "stroke-destructive"}
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
@@ -159,7 +159,7 @@ export function RenderPanel() {
           </div>
         </div>
       </div>
-      <div className="flex justify-between font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+      <div className="flex justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
         <span>RAF · COMPOSITE</span>
         <span>{ms} MS</span>
       </div>
@@ -193,7 +193,7 @@ export function MemoryPanel() {
           {mb != null ? mb : "—"}
           <span className="ml-1 text-xs font-normal text-muted-foreground">MB</span>
         </div>
-        <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+        <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           {gb != null ? `/ ${gb} GB · ${pct.toFixed(0)}% HEAP` : "HEAP API UNAVAILABLE"}
         </div>
       </div>
@@ -230,7 +230,7 @@ export function NetworkPanel() {
           {down != null ? down.toFixed(1) : "—"}
           <span className="ml-1 text-xs font-normal text-muted-foreground">MB/S</span>
         </div>
-        <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+        <div className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           {rtt != null ? `RTT ${rtt} MS · ` : ""}
           <span className={online ? "text-success" : "text-destructive"}>{online ? "ONLINE" : "OFFLINE"}</span>
         </div>
@@ -279,7 +279,7 @@ export function BatteryPanel() {
         )}
       </div>
       <SegmentBar pct={level ?? 0} segments={14} className="mt-3" />
-      <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+      <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
         {level == null ? "BATTERY API UNAVAILABLE" : charging ? "ON AC POWER · CHARGING" : "ON BATTERY"}
       </div>
     </Chrome>
@@ -330,7 +330,7 @@ export function SeismographPanel() {
         </span>
       }
     >
-      <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+      <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
         {Math.round(epm)} EVT/MIN · POINTER + KEYS
       </div>
       <svg width="100%" height="44" viewBox="0 0 480 44" preserveAspectRatio="none" className="mt-2" aria-hidden>

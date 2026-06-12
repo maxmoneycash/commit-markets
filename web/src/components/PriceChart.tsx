@@ -141,7 +141,7 @@ export default function PriceChart({
         {hover && (
           <div
             className="pointer-events-none absolute top-1 z-20 -translate-x-1/2 whitespace-nowrap rounded-md border border-line bg-popover px-2 py-1 font-mono text-[10px] text-popover-foreground shadow-sm"
-            style={{ left: Math.max(64, Math.min(w - 64, hover.x)) }}
+            style={{ left: Math.max(Math.min(130, w / 2), Math.min(w - 130, hover.x)) }}
           >
             <span className="text-muted-foreground">{hover.date}</span>
             {"  "}
@@ -219,8 +219,8 @@ export default function PriceChart({
               const x = mode === "candles" ? xCandle(Math.floor(idx / B)) : xDay(idx);
               return (
                 <g key={`ev${i}`}>
-                  <line x1={x} x2={x} y1={padT} y2={volTop + volH} className="stroke-[#ff9f0a]" strokeWidth={1} strokeDasharray="2 4" opacity={0.5} />
-                  <text x={x + 4} y={padT + 10} className="fill-[#ff9f0a] font-mono" fontSize={8} opacity={0.9}>{ev.label}</text>
+                  <line x1={x} x2={x} y1={padT} y2={volTop + volH} className="stroke-amber" strokeWidth={1} strokeDasharray="2 4" opacity={0.5} />
+                  <text x={x + 4} y={padT + 10} className="fill-amber font-mono" fontSize={8} opacity={0.9}>{ev.label}</text>
                 </g>
               );
             })}

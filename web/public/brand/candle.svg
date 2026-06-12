@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- commit-markets candlestick mark -->
+  <g stroke="#ff9f0a" stroke-linecap="round">
+    <!-- left candle (shorter) -->
+    <line x1="21" y1="20" x2="21" y2="48" stroke-width="4"/>
+    <rect x="14" y="27" width="14" height="15" rx="2.5" fill="#ff9f0a" stroke="none"/>
+    <!-- right candle (taller, the breakout) -->
+    <line x1="43" y1="8" x2="43" y2="56" stroke-width="4"/>
+    <rect x="36" y="18" width="14" height="26" rx="2.5" fill="#ff9f0a" stroke="none"/>
+  </g>
+</svg>

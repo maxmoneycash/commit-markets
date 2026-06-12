@@ -12,6 +12,7 @@ import {
   LiveChrome,
 } from "@/components/live/LivePanels";
 import { UsageSection } from "@/components/live/UsagePanels";
+import { Panel, PanelHeader, PanelTitle } from "@/components/panel";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -60,15 +61,17 @@ export default async function LivePage({ params }: { params: Promise<{ handle: s
   return (
     <main className="px-2">
       <div className="mx-auto max-w-5xl py-4">
-        {/* header strip */}
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-1 px-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-          <span>
-            <Link href={`/${t.handle}`} className="text-foreground hover:text-success">{t.symbol}</Link> · MISSION CONTROL
-          </span>
-          <span className="hidden sm:inline">COMMIT-MARKETS · SYS.CM1</span>
-        </div>
+        <Panel>
+          <PanelHeader className="flex flex-wrap items-center justify-between gap-1">
+            <PanelTitle>
+              <Link href={`/${t.handle}`} className="text-foreground hover:text-success">{t.symbol}</Link> · Mission Control
+            </PanelTitle>
+            <span className="hidden font-mono text-[10px] uppercase tracking-wider text-muted-foreground sm:inline">
+              COMMIT-MARKETS · SYS.CM1
+            </span>
+          </PanelHeader>
 
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-px bg-line sm:grid-cols-2 lg:grid-cols-4">
           {/* row 1-2: the chart is the star */}
           <div className="grid sm:col-span-2 lg:col-span-2 lg:row-span-2">
             <LiveChrome
@@ -99,18 +102,18 @@ export default async function LivePage({ params }: { params: Promise<{ handle: s
             <ActivityHeatmap days={t.daysYear} />
           </LiveChrome>
           <LiveChrome label="streak">
-            <div className="flex flex-1 items-baseline gap-1 text-[#ff9f0a]">
+            <div className="flex flex-1 items-baseline gap-1 text-amber">
               <DotDigits text={`${t.stats.currentStreakDays}`} dot={5} gap={2.5} />
               <span className="opacity-40"><DotDigits text="D" dot={3.5} gap={1.5} /></span>
             </div>
-            <SegmentBar pct={(t.stats.currentStreakDays / Math.max(1, best)) * 100} segments={10} onClass="fill-[#ff9f0a]" className="mt-3" />
-            <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+            <SegmentBar pct={(t.stats.currentStreakDays / Math.max(1, best)) * 100} segments={10} onClass="fill-amber" className="mt-3" />
+            <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
               {t.stats.currentStreakDays > 0 ? `SINCE ${since} · ` : ""}BEST {best}
             </div>
           </LiveChrome>
 
           {/* row 4 */}
-          <div className="sm:col-span-2">
+          <div className="grid sm:col-span-2">
             <SeismographPanel />
           </div>
           <LiveChrome label={`activity · @${t.handle}`} right={<span>PUSH · MAIN</span>} className="sm:col-span-2">
@@ -126,12 +129,13 @@ export default async function LivePage({ params }: { params: Promise<{ handle: s
               ))}
             </div>
           </LiveChrome>
-        </div>
+          </div>
 
-        <div className="mt-3 flex items-center justify-between px-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">
-          <span>RENDER · MEMORY · NETWORK · BATTERY · INPUT = YOUR BROWSER, MEASURED LIVE</span>
-          <Link href={`/${t.handle}`} className="hover:text-foreground">← TICKER</Link>
-        </div>
+          <div className="screen-line-top flex flex-wrap items-center justify-between gap-1 px-4 py-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground/60">
+            <span>RENDER · MEMORY · NETWORK · BATTERY · INPUT = YOUR BROWSER, MEASURED LIVE</span>
+            <Link href={`/${t.handle}`} className="hover:text-foreground">← TICKER</Link>
+          </div>
+        </Panel>
       </div>
     </main>
   );
