@@ -26,12 +26,46 @@ type Render = (d: BadgeData, theme: BadgeTheme) => string;
 const chg = (d: BadgeData) => `${d.up ? "▲" : "▼"} ${Math.abs(d.changePct30d).toFixed(1)}%`;
 const col = (d: BadgeData) => (d.up ? UP : DOWN);
 
-// 1 — CARD · the flagship hero ------------------------------------------------
+// 1 — CARD · the flagship hero: candles + annual-report stat block -------------
 const card: Render = (d, theme) => {
   const P = PAL[theme];
-  const W = 480, H = 200;
+  const W = 480, H = 344;
   const c = col(d);
   const sym = esc(d.symbol);
+
+  // derived "year in review" stats from the daily series
+  let active = 0, longest = 0, run = 0, busiest = 0;
+  const byDow = [0, 0, 0, 0, 0, 0, 0]; // Sun..Sat
+  let totalCommits = 0;
+  for (const day of d.days) {
+    byDow[new Date(day.date + "T00:00:00Z").getUTCDay()] += day.commits;
+    totalCommits += day.commits;
+    if (day.commits > 0) {
+      active++;
+      run++;
+      if (run > longest) longest = run;
+      if (day.commits > busiest) busiest = day.commits;
+    } else run = 0;
+  }
+  const activePct = Math.round((active / Math.max(1, d.days.length)) * 100);
+  const DOW = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  const order = [1, 2, 3, 4, 5, 6, 0]; // Mon-first
+  const dowMax = Math.max(1, ...byDow);
+  const topDow = DOW[byDow.indexOf(dowMax)];
+
+  const cell = (x: number, label: string, num: string, sub: string) =>
+    `<text x="${x}" y="206" font-family="${MONO}" font-size="9" fill="${P.faint}" letter-spacing="1">${label}</text>
+     <text x="${x}" y="228" font-family="${MONO}" font-size="19" font-weight="700" fill="${P.text}">${num}</text>
+     <text x="${x}" y="243" font-family="${MONO}" font-size="9" fill="${P.muted}">${sub}</text>`;
+
+  const bars = order
+    .map((dow, i) => {
+      const h = Math.max(2, (byDow[dow] / dowMax) * 26);
+      const hot = byDow[dow] === dowMax;
+      return `<rect x="${22 + i * 30}" y="${300 - h}" width="20" height="${h.toFixed(1)}" rx="1.5" fill="${hot ? c : P.line}"/>
+              <text x="${32 + i * 30}" y="312" text-anchor="middle" font-family="${MONO}" font-size="8" fill="${hot ? c : P.faint}">${DOW[dow][0]}</text>`;
+    })
+    .join("");
   const av = d.avatar
     ? `<clipPath id="av"><rect x="20" y="20" width="40" height="40" rx="9"/></clipPath>
        <image href="${d.avatar}" x="20" y="20" width="40" height="40" clip-path="url(#av)"/>
@@ -55,13 +89,20 @@ const card: Render = (d, theme) => {
     <rect x="${W - 22 - 78}" y="50" width="78" height="20" rx="10" fill="${c}" fill-opacity="0.14"/>
     <text x="${W - 22 - 39}" y="64" text-anchor="middle" fill="${c}">${chg(d)}</text>
   </g>
-  ${candleSvg(toCandles(d.spark, 40), 20, 86, W - 40, 70)}
-  <line x1="0" x2="${W}" y1="161" y2="161" stroke="${P.line}"/>
-  <g font-family="${MONO}" font-size="10" fill="${P.muted}">
-    <text x="22" y="182">COMMITS <tspan fill="${P.text}" font-weight="600">${fmt(d.totalLastYear)}</tspan></text>
-    <text x="142" y="182">STREAK <tspan fill="${P.text}" font-weight="600">${d.streak}d</tspan></text>
-    <text x="244" y="182">PEAK WK <tspan fill="${P.text}" font-weight="600">${d.peakWeek}</tspan></text>
-    <text x="${W - 22}" y="182" text-anchor="end" fill="${P.faint}">commit-markets</text>
+  ${candleSvg(toCandles(d.spark, 40), 20, 86, W - 40, 88)}
+  <line x1="0" x2="${W}" y1="188" y2="188" stroke="${P.line}"/>
+  ${cell(22, "COMMITS · 52W", totalCommits.toLocaleString(), "past 365 days")}
+  ${cell(138, "ACTIVE DAYS", `${active}`, `${activePct}% of the year`)}
+  ${cell(254, "LONGEST STREAK", `${longest}d`, "best run")}
+  ${cell(370, "BUSIEST DAY", `${busiest}`, "commits in one day")}
+  <line x1="0" x2="${W}" y1="258" y2="258" stroke="${P.line}"/>
+  ${bars}
+  <text x="250" y="284" font-family="${MONO}" font-size="9" fill="${P.faint}" letter-spacing="1">SHIPS HARDEST ON</text>
+  <text x="250" y="305" font-family="${MONO}" font-size="19" font-weight="700" fill="${c}">${topDow}<tspan font-size="11" fill="${P.muted}" font-weight="400"> · ${Math.round((dowMax / Math.max(1, totalCommits)) * 100)}% of commits</tspan></text>
+  <line x1="0" x2="${W}" y1="322" y2="322" stroke="${P.line}"/>
+  <g font-family="${MONO}" font-size="9" fill="${P.faint}">
+    <text x="22" y="${H - 10}">github.com/${esc(clampHandle(d.handle))}</text>
+    <text x="${W - 22}" y="${H - 10}" text-anchor="end">commit-markets</text>
   </g>
   <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="11.5" fill="none" stroke="${P.line}"/>
 </g>
