@@ -41,7 +41,8 @@ export default async function LivePage({ params }: { params: Promise<{ handle: s
   const events = await getUserEvents(t.handle);
 
   const up = t.stats.changePct30d >= 0;
-  const band = chartBandSvg(t.priceDaily, 0, 8, 560, 230, "dark");
+  const bandDark = chartBandSvg(t.priceDaily, 0, 8, 560, 230, "dark");
+  const bandLight = chartBandSvg(t.priceDaily, 0, 8, 560, 230, "light");
 
   // streak details
   let run = 0;
@@ -60,11 +61,11 @@ export default async function LivePage({ params }: { params: Promise<{ handle: s
     <main className="px-2">
       <div className="mx-auto max-w-5xl py-4">
         {/* header strip */}
-        <div className="mb-3 flex items-center justify-between px-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-1 px-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
           <span>
             <Link href={`/${t.handle}`} className="text-foreground hover:text-success">{t.symbol}</Link> · MISSION CONTROL
           </span>
-          <span>COMMIT-MARKETS · SYS.CM1</span>
+          <span className="hidden sm:inline">COMMIT-MARKETS · SYS.CM1</span>
         </div>
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -79,7 +80,8 @@ export default async function LivePage({ params }: { params: Promise<{ handle: s
               }
               className="cm-dotbg"
             >
-              <svg viewBox="0 0 560 246" className="h-full w-full flex-1" preserveAspectRatio="xMidYMid meet" aria-hidden dangerouslySetInnerHTML={{ __html: band }} />
+              <svg viewBox="0 0 560 246" className="hidden h-full w-full flex-1 dark:block" preserveAspectRatio="xMidYMid meet" aria-hidden dangerouslySetInnerHTML={{ __html: bandDark }} />
+              <svg viewBox="0 0 560 246" className="h-full w-full flex-1 dark:hidden" preserveAspectRatio="xMidYMid meet" aria-hidden dangerouslySetInnerHTML={{ __html: bandLight }} />
             </LiveChrome>
           </div>
           <RenderPanel />

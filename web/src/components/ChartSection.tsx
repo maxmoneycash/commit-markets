@@ -25,12 +25,14 @@ export function ChartSection({
   const [range, setRange] = useState<R>("1y");
   const [data, setData] = useState<Data>(initial);
   const [loading, setLoading] = useState(false);
-  const cache = useRef<Record<string, Data>>({ "1y": initial });
-  const inflight = useRef<Record<string, Promise<Data | null>>>({});
+  const cache = useRef<Partial<Record<string, Data>>>({ "1y": initial });
+  const inflight = useRef<Partial<Record<string, Promise<Data | null>>>>({});
 
   function load(r: R): Promise<Data | null> {
-    if (cache.current[r]) return Promise.resolve(cache.current[r]);
-    if (inflight.current[r]) return inflight.current[r];
+    const cached = cache.current[r];
+    if (cached) return Promise.resolve(cached);
+    const pending = inflight.current[r];
+    if (pending) return pending;
     const p = fetch(`/api/chart?handle=${encodeURIComponent(handle)}&range=${r}`)
       .then((res) => (res.ok ? (res.json() as Promise<Data>) : null))
       .then((d) => {
@@ -56,8 +58,9 @@ export function ChartSection({
   async function pick(r: R) {
     if (r === range || kind !== "user") return;
     setRange(r);
-    if (cache.current[r]) {
-      setData(cache.current[r]);
+    const cached = cache.current[r];
+    if (cached) {
+      setData(cached);
       return;
     }
     setLoading(true);

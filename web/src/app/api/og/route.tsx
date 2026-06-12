@@ -2,7 +2,6 @@ import { ImageResponse } from "next/og";
 import { getUserTicker, getRepoTicker, type Ticker } from "@/lib/github";
 
 export const runtime = "nodejs";
-export const alt = "commit-markets ticker";
 const size = { width: 1200, height: 630 };
 
 async function resolve(handle: string): Promise<Ticker | null> {
