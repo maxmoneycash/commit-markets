@@ -14,3 +14,6 @@ __pycache__/
 .venv/
 
 .DS_Store
+
+# internal docs never go in the public repo — keep them in commit-markets-internal
+/docs/internal/
