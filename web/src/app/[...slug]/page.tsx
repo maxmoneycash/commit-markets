@@ -6,6 +6,7 @@ import { RangeBar } from "@/components/RangeBar";
 import { HatchSeparator } from "@/components/HatchSeparator";
 import { Panel, PanelHeader, PanelTitle, PanelContent } from "@/components/panel";
 import { CopyButton } from "@/components/CopyButton";
+import { Fundamentals } from "@/components/Fundamentals";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -143,6 +144,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
             ))}
           </div>
         </Panel>
+
+        {t.kind === "user" && <Fundamentals handle={t.handle} avgPerWeek={s.avgPerWeek} marketCap={s.marketCap} />}
 
         <HatchSeparator />
 

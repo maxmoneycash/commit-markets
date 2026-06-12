@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import type { Day } from "@/lib/github";
+import { MACRO_EVENTS } from "@/lib/events";
 
 // Primary price chart, rendered at DAILY resolution.
 // - area: the daily momentum line (fine-grained)
@@ -211,6 +212,18 @@ export default function PriceChart({
                 {lastVal.toFixed(0)}
               </text>
             </g>
+
+            {MACRO_EVENTS.map((ev, i) => {
+              const idx = days.findIndex((d) => d.date === ev.date);
+              if (idx < 0) return null;
+              const x = mode === "candles" ? xCandle(Math.floor(idx / B)) : xDay(idx);
+              return (
+                <g key={`ev${i}`}>
+                  <line x1={x} x2={x} y1={padT} y2={volTop + volH} className="stroke-[#ff9f0a]" strokeWidth={1} strokeDasharray="2 4" opacity={0.5} />
+                  <text x={x + 4} y={padT + 10} className="fill-[#ff9f0a] font-mono" fontSize={8} opacity={0.9}>{ev.label}</text>
+                </g>
+              );
+            })}
 
             {monthLabels.map((m, i) => (
               <text key={i} x={m.x} y={H - 8} textAnchor="middle" className="fill-muted-foreground/70 font-mono" fontSize={9}>
