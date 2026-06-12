@@ -27,9 +27,7 @@ developer output — not a vibe, not a token, an actual on-chain-attestable sign
   a *funding rate* ties the mark back to real commit activity.
 
 This repository is the **index engine** — the fast oracle layer that turns
-commit history into the series a market settles against. The on-chain market
-layer (perp, funding, listing) is tracked separately; see
-[`docs/DECISION.md`](docs/DECISION.md).
+commit history into the series a market settles against.
 
 ## How the market works (the one non-obvious part)
 
@@ -69,7 +67,7 @@ charts were dead-flat-then-vertical — nothing tradeable in between. So:
 > and puts a tiny repo and a giant one on the same scale.
 
 The harvester keeps per-commit `added`/`deleted`, so any metric can be recomputed
-without re-harvesting. Full rationale + data in [`docs/DECISION.md`](docs/DECISION.md).
+without re-harvesting.
 
 ## Engine (`cmkt`)
 
@@ -116,7 +114,6 @@ maxmoneycash  (account activity index)
 
 ```
 src/main.rs        cmkt engine: harvest (parallel) + index
-docs/DECISION.md   product decision record + full design log
 legacy/            Python/bash prototype (chart renderer not yet ported)
 data/              generated output (gitignored)
 ```
@@ -137,10 +134,9 @@ Interactive picker with live previews: **`/badges`** · docs: [`docs/BADGES.md`]
 
 Standalone, exploratory but real. Being built **frontend-first**: a viral,
 play-money **GitHub Stock Exchange** (instant, no money, no chain) is the wedge —
-see [`docs/PRODUCT.md`](docs/PRODUCT.md) and [`web/`](web/). The real financial
+see [`web/`](web/). The real financial
 market layer (perp, funding, listing fee + lister fee-share, settlement venue) is
-a later, independent phase. Open questions are at the bottom of
-[`docs/DECISION.md`](docs/DECISION.md).
+a later, independent phase.
 
 ## Credits
 
