@@ -1,5 +1,5 @@
 import { getUserTicker, getUserEvents } from "@/lib/github";
-import { toCandles, candleSvg, UP, DOWN } from "@/lib/badges/core";
+import { chartBandSvg } from "@/lib/badges/core";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { DotDigits, SegmentBar } from "@/components/live/DotMatrix";
 import {
@@ -41,10 +41,7 @@ export default async function LivePage({ params }: { params: Promise<{ handle: s
   const events = await getUserEvents(t.handle);
 
   const up = t.stats.changePct30d >= 0;
-  const candles = candleSvg(toCandles(t.priceDaily.slice(-120), 24), 0, 2, 192, 56, {
-    up: UP,
-    down: DOWN,
-  });
+  const band = chartBandSvg(t.priceDaily, 0, 8, 560, 230, "dark");
 
   // streak details
   let run = 0;
@@ -71,25 +68,24 @@ export default async function LivePage({ params }: { params: Promise<{ handle: s
         </div>
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {/* row 1-2 */}
-          <div className="lg:col-span-2 lg:row-span-2 grid">
-            <ClockPanel />
+          {/* row 1-2: the chart is the star */}
+          <div className="grid sm:col-span-2 lg:col-span-2 lg:row-span-2">
+            <LiveChrome
+              label="velocity · 1y"
+              right={
+                <span className={`font-semibold ${up ? "text-success" : "text-destructive"}`}>
+                  {t.stats.price.toFixed(2)} {up ? "▲" : "▼"} {Math.abs(t.stats.changePct30d).toFixed(1)}%
+                </span>
+              }
+              className="cm-dotbg"
+            >
+              <svg viewBox="0 0 560 246" className="h-full w-full flex-1" preserveAspectRatio="xMidYMid meet" aria-hidden dangerouslySetInnerHTML={{ __html: band }} />
+            </LiveChrome>
           </div>
           <RenderPanel />
           <MemoryPanel />
 
-          {/* velocity */}
-          <LiveChrome label="velocity · 120d">
-            <div className="flex flex-1 items-end justify-between gap-3">
-              <div>
-                <div className="font-mono text-2xl font-bold text-foreground">{t.stats.price.toFixed(2)}</div>
-                <div className={`font-mono text-[11px] font-semibold ${up ? "text-success" : "text-destructive"}`}>
-                  {up ? "▲" : "▼"} {Math.abs(t.stats.changePct30d).toFixed(1)}% · 30D
-                </div>
-              </div>
-              <svg width="192" height="60" viewBox="0 0 192 60" className="shrink-0" aria-hidden dangerouslySetInnerHTML={{ __html: candles }} />
-            </div>
-          </LiveChrome>
+          <ClockPanel compact />
           <BatteryPanel />
 
           {/* premium telemetry (connector) */}

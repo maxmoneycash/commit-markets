@@ -39,7 +39,7 @@ function LiveTag() {
 }
 
 // — CLOCK ————————————————————————————————————————————————————————————
-export function ClockPanel() {
+export function ClockPanel({ compact = false }: { compact?: boolean }) {
   const [now, setNow] = useState<Date | null>(null);
   const [uptime, setUptime] = useState(0);
   useEffect(() => {
@@ -60,6 +60,28 @@ export function ClockPanel() {
     : "";
   const week = now ? Math.ceil(((+now - +new Date(now.getFullYear(), 0, 1)) / 86400000 + 1) / 7) : 0;
   const up = `${String(Math.floor(uptime / 3600)).padStart(2, "0")}:${String(Math.floor((uptime % 3600) / 60)).padStart(2, "0")}:${String(uptime % 60).padStart(2, "0")}`;
+
+  if (compact) {
+    return (
+      <Chrome label="local time" right={<span className="text-success">GREEN ▪</span>} className="cm-dotbg">
+        <div className="flex flex-1 items-center py-2 text-foreground">
+          {now ? (
+            <div className="flex items-end gap-1.5">
+              <DotDigits text={`${hh}:${mm}`} dot={4} gap={1.8} off />
+              <span className="text-muted-foreground/50">
+                <DotDigits text={ss} dot={2.4} gap={1.2} />
+              </span>
+            </div>
+          ) : (
+            <div className="h-[39px]" />
+          )}
+        </div>
+        <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+          {day ? `${day.slice(0, 3).toUpperCase()} · ` : ""}{date} · WK {week} · UP {up}
+        </div>
+      </Chrome>
+    );
+  }
 
   return (
     <Chrome label="local time" right={<span>UPTIME {up}</span>} className="cm-dotbg row-span-2">
