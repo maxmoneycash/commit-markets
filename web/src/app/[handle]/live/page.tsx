@@ -11,6 +11,7 @@ import {
   SeismographPanel,
   LiveChrome,
 } from "@/components/live/LivePanels";
+import { UsageSection } from "@/components/live/UsagePanels";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -90,6 +91,9 @@ export default async function LivePage({ params }: { params: Promise<{ handle: s
             </div>
           </LiveChrome>
           <BatteryPanel />
+
+          {/* premium telemetry (connector) */}
+          <UsageSection handle={t.handle} />
 
           {/* row 3 */}
           <NetworkPanel />
