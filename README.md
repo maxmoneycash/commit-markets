@@ -121,6 +121,18 @@ legacy/            Python/bash prototype (chart renderer not yet ported)
 data/              generated output (gitignored)
 ```
 
+## README badges
+
+Put your live ticker on your GitHub profile — ten dynamic SVG styles (hero
+card, terminal, ticker tape, candles, heatmap, stonks, shields pill, bloomberg,
+receipt, glow), all linking back to your ticker page:
+
+```md
+[![$YOU on commit-markets](https://SITE/api/badge?handle=YOU&style=card)](https://SITE/YOU)
+```
+
+Interactive picker with live previews: **`/badges`** · docs: [`docs/BADGES.md`](docs/BADGES.md)
+
 ## Status
 
 Standalone, exploratory but real. Being built **frontend-first**: a viral,

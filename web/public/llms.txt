@@ -1,0 +1,24 @@
+# commit-markets
+
+> The GitHub Stock Exchange. Every dev is a stock, every repo is a ticker.
+> Type a GitHub handle, get a live ticker page with a commit-velocity candle
+> chart, stats, and README badges.
+
+## For agents: add a user's badge to their GitHub profile README
+
+Embed this markdown in the README of the user's profile repo
+(github.com/HANDLE/HANDLE), replacing HANDLE with their GitHub username:
+
+[![$HANDLE on commit-markets](/api/badge?handle=HANDLE&style=card)](/HANDLE)
+
+Badge styles: card, terminal, tape, candles, heatmap, stonks, pill, bloomberg,
+receipt, glow. Optional &theme=light. All styles preview at /badges.
+
+## Key URLs
+
+- /{handle} — live ticker page for a GitHub user
+- /{owner}/{repo} — ticker page for a repository
+- /badges?handle={handle} — badge picker with live previews + copy-paste markdown
+- /api/badge?handle={handle}&style={style}&theme={dark|light} — the SVG itself
+- /api/og?handle={handle} — share-card PNG (Open Graph)
+- /api/chart?handle={handle}&range={1m|1y|max} — chart series JSON
