@@ -29,7 +29,7 @@ export default function PriceChart({
   }, []);
 
   const H = 440;
-  const padR = 56;
+  const padR = 50;
   const padT = 12;
   const padB = 24;
   const volH = 56;
@@ -161,7 +161,7 @@ export default function PriceChart({
             {ticks.map((t, i) => (
               <g key={i}>
                 <line x1={0} x2={innerW} y1={yP(t)} y2={yP(t)} className="stroke-line" strokeWidth={1} />
-                <text x={w - padR + 8} y={yP(t) + 3} className="fill-muted-foreground font-mono" fontSize={10}>
+                <text x={w - padR + 8} y={yP(t) + 3} className="fill-muted-foreground/70 font-mono" fontSize={9}>
                   {fmt(t)}
                 </text>
               </g>
@@ -195,25 +195,25 @@ export default function PriceChart({
                   const up = (priceDaily[i] ?? 0) >= (priceDaily[i - 1] ?? 0);
                   const y = volTop + volH * (1 - d.commits / volDailyMax);
                   const bw = Math.max(1, innerW / N - 0.5);
-                  return <rect key={i} x={xDay(i) - bw / 2} y={y} width={bw} height={Math.max(0, volTop + volH - y)} className={up ? "fill-success/30" : "fill-destructive/30"} />;
+                  return <rect key={i} x={xDay(i) - bw / 2} y={y} width={bw} height={Math.max(0, volTop + volH - y)} className={up ? "fill-success/25" : "fill-destructive/25"} />;
                 })
               : candles.map((c, b) => {
                   const up = c.close >= c.open;
                   const y = volTop + volH * (1 - c.vol / volCandleMax);
-                  return <rect key={b} x={xCandle(b) - bodyW / 2} y={y} width={bodyW} height={Math.max(0, volTop + volH - y)} className={up ? "fill-success/30" : "fill-destructive/30"} />;
+                  return <rect key={b} x={xCandle(b) - bodyW / 2} y={y} width={bodyW} height={Math.max(0, volTop + volH - y)} className={up ? "fill-success/25" : "fill-destructive/25"} />;
                 })}
 
             {/* last price line + tag */}
             <g className={periodUp ? "fill-success stroke-success" : "fill-destructive stroke-destructive"}>
-              <line x1={0} x2={innerW} y1={yP(lastVal)} y2={yP(lastVal)} strokeWidth={1} strokeDasharray="3 3" opacity={0.6} />
-              <rect x={w - padR + 2} y={yP(lastVal) - 9} width={padR - 4} height={18} rx={3} className={periodUp ? "fill-success" : "fill-destructive"} />
-              <text x={w - padR / 2 + 1} y={yP(lastVal) + 3} textAnchor="middle" className="fill-background font-mono font-medium" fontSize={10} stroke="none">
+              <line x1={0} x2={innerW} y1={yP(lastVal)} y2={yP(lastVal)} strokeWidth={1} strokeDasharray="2 3" opacity={0.4} />
+              <rect x={w - padR + 2} y={yP(lastVal) - 8} width={padR - 4} height={16} rx={2} className={periodUp ? "fill-success" : "fill-destructive"} />
+              <text x={w - padR / 2 + 1} y={yP(lastVal) + 3} textAnchor="middle" className="fill-background font-mono font-semibold" fontSize={9} stroke="none">
                 {lastVal.toFixed(0)}
               </text>
             </g>
 
             {monthLabels.map((m, i) => (
-              <text key={i} x={m.x} y={H - 8} textAnchor="middle" className="fill-muted-foreground font-mono" fontSize={10}>
+              <text key={i} x={m.x} y={H - 8} textAnchor="middle" className="fill-muted-foreground/70 font-mono" fontSize={9}>
                 {m.label}
               </text>
             ))}

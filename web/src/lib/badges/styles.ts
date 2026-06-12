@@ -17,6 +17,7 @@ import {
   sparkPath,
   toCandles,
   candleSvg,
+  chartBandSvg,
   heatLevel,
   dotDefs,
 } from "./core";
@@ -89,7 +90,7 @@ const card: Render = (d, theme) => {
     <rect x="${W - 22 - 78}" y="50" width="78" height="20" rx="10" fill="${c}" fill-opacity="0.14"/>
     <text x="${W - 22 - 39}" y="64" text-anchor="middle" fill="${c}">${chg(d)}</text>
   </g>
-  ${candleSvg(toCandles(d.spark, 40), 20, 86, W - 40, 88)}
+  ${chartBandSvg(d.priceDaily, 20, 86, W - 40, 92, theme)}
   <line x1="0" x2="${W}" y1="188" y2="188" stroke="${P.line}"/>
   ${cell(22, "COMMITS · 52W", totalCommits.toLocaleString(), "past 365 days")}
   ${cell(138, "ACTIVE DAYS", `${active}`, `${activePct}% of the year`)}
@@ -184,7 +185,7 @@ const candles: Render = (d, theme) => {
   const P = PAL[theme];
   const W = 480, H = 200;
   const c = col(d);
-  const cs = toCandles(d.spark, 30);
+  const cs = toCandles(d.priceDaily, 30);
   const last = d.spark[d.spark.length - 1] ?? 0;
   const hi = Math.max(...cs.map((x) => x.high), 1);
   const lo = Math.min(...cs.map((x) => x.low), 0);

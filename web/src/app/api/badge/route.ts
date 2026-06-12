@@ -20,7 +20,8 @@ export async function GET(req: Request) {
     const data = await getBadgeData(handle, style.needsAvatar);
     if (!data) return svgResponse(fallbackSvg(`@${handle} not found`), 404);
     return svgResponse(style.render(data, theme), 200);
-  } catch {
+  } catch (err) {
+    console.error("[badge]", err);
     return svgResponse(fallbackSvg("temporarily unavailable"), 503);
   }
 }

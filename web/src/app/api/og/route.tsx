@@ -34,11 +34,15 @@ export async function GET(req: Request) {
 
   const up = t.stats.changePct30d >= 0;
   const accent = up ? green : red;
-  const closes = t.candles.map((c) => c.close);
-  const max = Math.max(1, ...closes);
-  const min = Math.min(...closes);
-  const range = Math.max(1, max - min);
-  const bars = closes.slice(-48);
+  // real candlesticks (same look as the site chart): weekly OHLC of the momentum
+  const UPC = "#22c55e";
+  const DOWNC = "#e5484d";
+  const candles = t.candles.slice(-48);
+  const hi = Math.max(1, ...candles.map((c) => c.high));
+  const lo = Math.min(0, ...candles.map((c) => c.low));
+  const range = Math.max(1, hi - lo);
+  const CH = 170; // chart band height
+  const yOf = (v: number) => CH - ((v - lo) / range) * CH;
 
   return new ImageResponse(
     (
@@ -76,10 +80,19 @@ export async function GET(req: Request) {
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 170, marginTop: 40 }}>
-          {bars.map((c, i) => {
-            const h = 16 + ((c - min) / range) * 150;
-            return <div key={i} style={{ width: 18, height: h, background: accent, opacity: 0.85, borderRadius: 3 }} />;
+        <div style={{ display: "flex", gap: 5, height: CH, marginTop: 40 }}>
+          {candles.map((c, i) => {
+            const colr = c.close >= c.open ? UPC : DOWNC;
+            const bodyTop = yOf(Math.max(c.open, c.close));
+            const bodyH = Math.max(2, Math.abs(yOf(c.close) - yOf(c.open)));
+            const wickTop = yOf(c.high);
+            const wickH = Math.max(2, yOf(c.low) - yOf(c.high));
+            return (
+              <div key={i} style={{ display: "flex", position: "relative", width: 17, height: CH }}>
+                <div style={{ position: "absolute", left: 8, top: wickTop, width: 1.5, height: wickH, background: colr, display: "flex" }} />
+                <div style={{ position: "absolute", left: 2, top: bodyTop, width: 13, height: bodyH, background: colr, borderRadius: 1, display: "flex" }} />
+              </div>
+            );
           })}
         </div>
 

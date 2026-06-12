@@ -152,7 +152,7 @@
 /* dot-grid background for the chart (bklit-style, with edge fade) */
 .cm-dotbg {
   background-image: radial-gradient(
-    color-mix(in oklab, var(--border) 85%, transparent) 1px,
+    color-mix(in oklab, var(--border) 60%, transparent) 1px,
     transparent 1.5px
   );
   background-size: 18px 18px;

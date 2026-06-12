@@ -18,13 +18,15 @@ export type BadgeData = {
   peakWeek: number;
   followers: number;
   spark: number[]; // downsampled momentum (~60 pts)
+  priceDaily: number[]; // full-resolution momentum (for candle rendering)
   days: { date: string; commits: number }[]; // last 364 days, week-aligned
   avatar: string | null; // data URI or null
 };
 
 // — palettes ————————————————————————————————————————————————————————————
-export const UP = "#26a69a";
-export const DOWN = "#ef5350";
+// candle colors match the site chart's success/destructive tokens exactly
+export const UP = "#22c55e";
+export const DOWN = "#e5484d";
 export const AMBER = "#ff9f0a";
 
 export const PAL = {
@@ -134,6 +136,58 @@ export function candleSvg(
   return s;
 }
 
+/** Faithful mini replica of the site's PriceChart candle band: same candle
+ *  density (slot 8px, 30% gap), 6% y-padding, theme candle colors, hairline
+ *  gridlines, dashed last-price line + tag. */
+export function chartBandSvg(
+  series: number[],
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  theme: BadgeTheme,
+): string {
+  if (!series.length) return "";
+  const P = PAL[theme];
+  const up = "#22c55e"; // --success (green-500), both themes
+  const down = theme === "dark" ? "#c52720" : "#dc2626"; // --destructive per theme
+  const tagW = 38;
+  const cw = w - tagW; // candles area, tag gutter on the right (like padR)
+  const n = Math.max(16, Math.floor(cw / 8));
+  const candles = toCandles(series, n);
+  const hi = Math.max(1, ...candles.map((c) => c.high));
+  const lo = Math.min(...candles.map((c) => c.low));
+  const pad = (hi - lo) * 0.06 || 1;
+  const dMax = hi + pad;
+  const dMin = Math.max(0, lo - pad);
+  const Y = (v: number) => y + h * (1 - (v - dMin) / (dMax - dMin || 1));
+  const slot = cw / candles.length;
+  const bw = Math.max(1.5, slot * 0.7);
+  let s = "";
+  // gridlines (3 hairlines like the chart's tick lines)
+  for (let i = 1; i <= 3; i++) {
+    const gy = y + (h * i) / 4;
+    s += `<line x1="${x}" x2="${x + cw}" y1="${gy.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${P.line}" stroke-width="1"/>`;
+  }
+  candles.forEach((c, i) => {
+    const cx = x + i * slot + slot / 2;
+    const colr = c.close >= c.open ? up : down;
+    const top = Math.min(Y(c.open), Y(c.close));
+    const bh = Math.max(1, Math.abs(Y(c.close) - Y(c.open)));
+    s += `<line x1="${cx.toFixed(1)}" x2="${cx.toFixed(1)}" y1="${Y(c.high).toFixed(1)}" y2="${Y(c.low).toFixed(1)}" stroke="${colr}" stroke-width="1"/>`;
+    s += `<rect x="${(cx - bw / 2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${colr}"/>`;
+  });
+  // last-price dashed line + tag (chart signature)
+  const last = candles[candles.length - 1];
+  const lastUp = last.close >= last.open;
+  const lp = Y(last.close);
+  const tagCol = lastUp ? up : down;
+  s += `<line x1="${x}" x2="${x + cw}" y1="${lp.toFixed(1)}" y2="${lp.toFixed(1)}" stroke="${tagCol}" stroke-width="1" stroke-dasharray="2 3" opacity="0.4"/>`;
+  s += `<rect x="${(x + cw + 2).toFixed(1)}" y="${(lp - 8).toFixed(1)}" width="${tagW - 4}" height="16" rx="2" fill="${tagCol}"/>`;
+  s += `<text x="${(x + cw + tagW / 2).toFixed(1)}" y="${(lp + 3).toFixed(1)}" text-anchor="middle" font-family="${MONO}" font-size="9" font-weight="600" fill="${P.bg}">${fmt(last.close)}</text>`;
+  return s;
+}
+
 export function heatLevel(commits: number): number {
   if (commits <= 0) return 0;
   if (commits <= 2) return 1;
@@ -185,6 +239,7 @@ export async function getBadgeData(handle: string, withAvatar: boolean): Promise
     peakWeek: t.stats.peakWeek,
     followers: t.stats.followers,
     spark,
+    priceDaily: t.priceDaily,
     days: t.daysYear,
     avatar: withAvatar ? await avatarDataUri(t.handle) : null,
   };
