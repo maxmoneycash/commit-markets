@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 const VARIANTS: { style: string; name: string; blurb: string; flagship?: boolean }[] = [
-  { style: "card", name: "The Card", blurb: "avatar · price · sparkline · stats", flagship: true },
+  { style: "card", name: "The Card", blurb: "avatar · price · candles · stats", flagship: true },
   { style: "terminal", name: "Terminal", blurb: "phosphor shell session, blinking cursor" },
   { style: "tape", name: "Ticker Tape", blurb: "scrolling marquee strip" },
   { style: "candles", name: "Candles", blurb: "52-week candlestick chart" },
@@ -86,7 +86,7 @@ export default async function BadgesPage({
           <PanelHeader>
             <PanelTitle>How it works</PanelTitle>
           </PanelHeader>
-          <PanelContent className="space-y-3 font-mono text-sm leading-relaxed text-foreground/80">
+          <PanelContent className="space-y-3 font-mono text-sm leading-relaxed text-foreground/80 [overflow-wrap:anywhere]">
             <p>
               1. Copy the markdown for any style above — it embeds a live SVG and links to your ticker page.
             </p>

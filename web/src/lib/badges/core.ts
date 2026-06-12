@@ -57,8 +57,9 @@ export function esc(s: string): string {
 }
 
 export function fmt(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  const trim = (s: string) => s.replace(/\.0$/, "");
+  if (n >= 1_000_000) return `${trim((n / 1_000_000).toFixed(1))}M`;
+  if (n >= 1000) return `${trim((n / 1000).toFixed(1))}k`;
   return `${Math.round(n)}`;
 }
 

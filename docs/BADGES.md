@@ -24,7 +24,7 @@ Interactive picker with live previews + copy buttons: **`/badges`**.
 
 | style       | one-liner                                          |
 | ----------- | -------------------------------------------------- |
-| `card`      | flagship hero — avatar, price, sparkline, stats    |
+| `card`      | flagship hero — avatar, price, candles, stats    |
 | `terminal`  | phosphor shell session with blinking cursor        |
 | `tape`      | animated scrolling ticker-tape strip               |
 | `candles`   | 52-week candlestick chart, dot-grid background     |

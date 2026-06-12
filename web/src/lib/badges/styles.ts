@@ -15,7 +15,6 @@ import {
   fmt,
   clampHandle,
   sparkPath,
-  areaPath,
   toCandles,
   candleSvg,
   heatLevel,
@@ -43,9 +42,6 @@ const card: Render = (d, theme) => {
 <title>${sym} — commit-markets</title>
 <defs>
   ${dotDefs("dg", theme === "dark" ? "#222826" : "#ececee")}
-  <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="${c}" stop-opacity="0.25"/><stop offset="100%" stop-color="${c}" stop-opacity="0"/>
-  </linearGradient>
   <clipPath id="r"><rect width="${W}" height="${H}" rx="12"/></clipPath>
 </defs>
 <g clip-path="url(#r)">
@@ -59,8 +55,7 @@ const card: Render = (d, theme) => {
     <rect x="${W - 22 - 78}" y="50" width="78" height="20" rx="10" fill="${c}" fill-opacity="0.14"/>
     <text x="${W - 22 - 39}" y="64" text-anchor="middle" fill="${c}">${chg(d)}</text>
   </g>
-  <path d="${areaPath(d.spark, 0, 96, W, 64)}" fill="url(#fade)"/>
-  <path d="${sparkPath(d.spark, 0, 96, W, 64)}" fill="none" stroke="${c}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+  ${candleSvg(toCandles(d.spark, 40), 20, 86, W - 40, 70)}
   <line x1="0" x2="${W}" y1="161" y2="161" stroke="${P.line}"/>
   <g font-family="${MONO}" font-size="10" fill="${P.muted}">
     <text x="22" y="182">COMMITS <tspan fill="${P.text}" font-weight="600">${fmt(d.totalLastYear)}</tspan></text>
