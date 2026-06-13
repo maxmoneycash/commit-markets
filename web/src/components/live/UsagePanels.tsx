@@ -197,7 +197,7 @@ export function UsageSection({ handle }: { handle: string }) {
         )}
       </LiveChrome>
 
-      <TokenFlowPanel tok={tok} />
+      <TokenFlowPanel tok={tok} ageSec={feed.ageSec} />
       {tok?.by_model && <ModelBreakdown models={tok.by_model} />}
     </>
   );
@@ -206,7 +206,7 @@ export function UsageSection({ handle }: { handle: string }) {
 // Where do the tokens actually go? Cache reads dominate agentic coding (~97%),
 // output is a tiny but expensive slice. This panel makes the read:write story
 // legible at a glance.
-function TokenFlowPanel({ tok }: { tok: UsagePayload["tokens"] }) {
+function TokenFlowPanel({ tok, ageSec }: { tok: UsagePayload["tokens"]; ageSec: number }) {
   const inTok = tok?.input_total ?? 0;
   const out = tok?.output_total ?? 0;
   const cacheRead = tok?.cache_read_total ?? 0;
@@ -219,7 +219,7 @@ function TokenFlowPanel({ tok }: { tok: UsagePayload["tokens"] }) {
   const cachePct = ((cacheRead + cacheWrite) / total) * 100;
 
   return (
-    <LiveChrome label="token flow · where it goes" right={<FreshTag ageSec={0} />} className="sm:col-span-2">
+    <LiveChrome label="token flow · where it goes" right={<FreshTag ageSec={ageSec} />} className="sm:col-span-2">
       <div className="flex items-baseline gap-4">
         <div>
           <div className="font-mono text-3xl font-bold text-foreground">

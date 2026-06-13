@@ -25,8 +25,11 @@ function fmtUsd(n: number): string {
 export function ModelBreakdown({ models }: { models: ModelUsage[] }) {
   if (!models || models.length === 0) return null;
 
-  const rows = [...models].sort((a, b) => b.cost - a.cost).slice(0, 10);
+  const sorted = [...models].sort((a, b) => b.cost - a.cost);
+  const rows = sorted.slice(0, 10);
+  const hiddenCount = sorted.length - rows.length;
   const totalCost = models.reduce((s, m) => s + m.cost, 0);
+  const hiddenCost = sorted.slice(10).reduce((s, m) => s + m.cost, 0);
   const maxCost = Math.max(1e-9, ...rows.map((m) => m.cost));
 
   return (
@@ -42,7 +45,9 @@ export function ModelBreakdown({ models }: { models: ModelUsage[] }) {
           const tokens = m.in + m.out + m.cacheRead + m.cacheWrite;
           const eff = effectivePerMtok(m.cost, m.in, m.out, m.cacheRead, m.cacheWrite);
           const share = totalCost > 0 ? (m.cost / totalCost) * 100 : 0;
-          const inOut = m.out > 0 ? Math.round(m.in / m.out) : null;
+          // read:write — everything fed in (incl. cache) vs output, matching
+          // the headline token-flow ratio (raw in:out reads ~0 for cache-heavy models)
+          const readWrite = m.out > 0 ? Math.round((m.in + m.cacheRead + m.cacheWrite) / m.out) : null;
           const color = PROVIDER_COLORS[meta.provider];
           return (
             <div key={m.name} className="flex flex-col gap-1 font-mono text-[11px]">
@@ -58,7 +63,7 @@ export function ModelBreakdown({ models }: { models: ModelUsage[] }) {
               </div>
               <div className="flex items-center gap-3 text-[10px] uppercase tracking-wider text-muted-foreground/70">
                 <span className="tabular-nums">{fmtTok(tokens)} tok</span>
-                {inOut != null && <span className="tabular-nums">in:out {inOut}:1</span>}
+                {readWrite != null && <span className="tabular-nums">rd:wr {readWrite}:1</span>}
                 <span className="ml-auto tabular-nums text-muted-foreground">
                   {eff != null ? `$${eff.toFixed(2)}` : "—"}
                   {ref && <span className="text-muted-foreground/50"> · ref ${ref.outputPerMtok}/out</span>}
@@ -68,6 +73,12 @@ export function ModelBreakdown({ models }: { models: ModelUsage[] }) {
           );
         })}
       </div>
+      {hiddenCount > 0 && (
+        <div className="mt-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground/70">
+          <span>+{hiddenCount} more models</span>
+          <span className="tabular-nums">{fmtUsd(hiddenCost)}</span>
+        </div>
+      )}
       <p className="mt-3 font-mono text-[9px] uppercase tracking-wider text-muted-foreground/50">
         effective = real cost ÷ tokens · ref prices editable in modelPricing.ts
       </p>
