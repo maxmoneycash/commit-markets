@@ -1,7 +1,21 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { Panel } from "@/components/panel";
 import { WaitlistForm } from "@/components/WaitlistForm";
+
+// Inlined candlestick mark — no asset dependency (public/*.png is gitignored,
+// so referencing a file would 404 on deploy). Scales crisply at any size.
+function CandleMark({ size = 40 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden className="mx-auto mb-5 opacity-90">
+      <g className="stroke-amber" strokeLinecap="round">
+        <line x1="21" y1="20" x2="21" y2="48" strokeWidth="4" />
+        <rect x="14" y="27" width="14" height="15" rx="2.5" className="fill-amber" stroke="none" />
+        <line x1="43" y1="8" x2="43" y2="56" strokeWidth="4" />
+        <rect x="36" y="18" width="14" height="26" rx="2.5" className="fill-amber" stroke="none" />
+      </g>
+    </svg>
+  );
+}
 
 export const metadata: Metadata = {
   title: "commit-markets — Long the shippers, short the ghosters",
@@ -25,15 +39,8 @@ export default function WaitlistPage() {
     <main className="px-2">
       <div className="mx-auto max-w-3xl">
         <Panel className="px-4 py-12 text-center sm:py-16">
-          <Image
-            src="/brand/candle-64.png"
-            alt=""
-            width={40}
-            height={40}
-            className="mx-auto mb-5 opacity-90"
-            priority
-          />
-          <div className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-success">
+          <CandleMark size={40} />
+          <div className="mb-3 font-mono text-xs uppercase tracking-widest text-success">
             commit-markets · early access
           </div>
           <h1 className="mx-auto max-w-xl text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
