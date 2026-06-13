@@ -7,9 +7,27 @@
 import { useEffect, useState } from "react";
 import { LiveChrome } from "./LivePanels";
 import { SegmentBar } from "./DotMatrix";
-import type { UsagePayload } from "@/lib/usageStore";
+import type { UsagePayload, HistoryPoint } from "@/lib/usageStore";
 
-type Feed = (UsagePayload & { connected: true; ageSec: number }) | { connected: false };
+type Feed =
+  | (UsagePayload & { connected: true; ageSec: number; history?: HistoryPoint[] })
+  | { connected: false };
+
+// Burn lane: token-burn velocity (tokens/min) from consecutive history points.
+// Totals only move when a session flushes, so clamp negatives (collector
+// restarts) and ignore gaps longer than 30 min.
+function burnSeries(hist: HistoryPoint[]): number[] {
+  const out: number[] = [];
+  for (let i = 1; i < hist.length; i++) {
+    const a = hist[i - 1];
+    const b = hist[i];
+    if (a.tokens_total == null || b.tokens_total == null) continue;
+    const dtMin = (b.at - a.at) / 60_000;
+    if (dtMin <= 0 || dtMin > 30) continue;
+    out.push(Math.max(0, (b.tokens_total - a.tokens_total) / dtMin));
+  }
+  return out;
+}
 
 function fmtTok(n: number): string {
   if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`;
@@ -47,7 +65,7 @@ export function UsageSection({ handle }: { handle: string }) {
     let alive = true;
     const poll = async () => {
       try {
-        const r = await fetch(`/api/usage?handle=${encodeURIComponent(handle)}`, { cache: "no-store" });
+        const r = await fetch(`/api/usage?handle=${encodeURIComponent(handle)}&history=1`, { cache: "no-store" });
         const d = (await r.json()) as Feed;
         if (alive) setFeed(d);
       } catch {
@@ -86,6 +104,9 @@ export function UsageSection({ handle }: { handle: string }) {
   const maxTok = Math.max(1, ...byAgent.map((a) => a.tokens));
   const agents = feed.agents ?? [];
   const m = feed.machine;
+  const burn = burnSeries(feed.history ?? []).slice(-24);
+  const burnMax = Math.max(1, ...burn);
+  const burnNow = burn.length ? burn.slice(-5).reduce((s, x) => s + x, 0) / Math.min(5, burn.length) : null;
 
   return (
     <>
@@ -119,6 +140,28 @@ export function UsageSection({ handle }: { handle: string }) {
             ALL-TIME · ${tok?.avg_usd_month != null ? Math.round(tok.avg_usd_month).toLocaleString() : "—"}/MO AVG
           </div>
         </div>
+        {burn.length > 1 && (
+          <>
+            <svg width="100%" height="18" viewBox="0 0 192 18" preserveAspectRatio="none" className="mt-3" aria-hidden>
+              {burn.map((v, i) => {
+                const h = Math.max(1.5, (v / burnMax) * 16);
+                return (
+                  <rect
+                    key={i}
+                    x={(24 - burn.length + i) * 8}
+                    y={18 - h}
+                    width={5}
+                    height={h}
+                    className={i === burn.length - 1 ? "fill-amber" : "fill-muted-foreground/30"}
+                  />
+                );
+              })}
+            </svg>
+            <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              BURN {burnNow != null ? fmtTok(burnNow) : "—"} TOK/MIN
+            </div>
+          </>
+        )}
         {tok?.cache_hit_rate != null && (
           <>
             <SegmentBar pct={tok.cache_hit_rate * 100} segments={14} onClass="fill-amber" className="mt-3" />

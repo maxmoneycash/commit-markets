@@ -1,5 +1,9 @@
-// Latest self-reported telemetry per handle. Dev: in-memory (single process).
-// Deploy: swap for Vercel KV/Redis — the API surface stays identical.
+// Latest self-reported telemetry per handle.
+// Prod (Vercel): Upstash Redis when UPSTASH_REDIS_REST_* / KV_REST_API_* env
+// vars exist — required, because serverless instances don't share memory.
+// Dev: in-memory fallback (single process), zero setup.
+
+import { Redis } from "@upstash/redis";
 
 export type AgentProc = { name: string; cpu: number; mem_mb: number };
 
@@ -23,6 +27,10 @@ export type UsagePayload = {
     cache_hit_rate?: number;
     models_used?: number;
     avg_usd_month?: number;
+    // live ccusage poll (moves tick-to-tick; `total` from the profile
+    // pipeline only moves when that repo's collector pushes)
+    live_total?: number;
+    live_cost_usd?: number;
   };
 };
 
@@ -30,6 +38,11 @@ type Entry = { payload: UsagePayload; at: number };
 export type HistoryPoint = { at: number; tokens_total?: number; cost_usd_total?: number; agents_cpu?: number };
 
 const HISTORY_MAX = 576; // ~48h at 5-min cadence
+const ENTRY_TTL_SEC = 7 * 24 * 3600; // stale collectors age out of Redis
+
+const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+const redis = url && token ? new Redis({ url, token }) : null;
 
 const g = globalThis as unknown as {
   __cmUsage?: Map<string, Entry>;
@@ -38,27 +51,66 @@ const g = globalThis as unknown as {
 const store = (g.__cmUsage ??= new Map<string, Entry>());
 const hist = (g.__cmUsageHist ??= new Map<string, HistoryPoint[]>());
 
-export function putUsage(p: UsagePayload): void {
-  const key = p.handle.toLowerCase();
-  store.set(key, { payload: p, at: Date.now() });
-  // ring buffer for the burn lane / fundamentals trends
-  const arr = hist.get(key) ?? [];
-  arr.push({
+function toHistoryPoint(p: UsagePayload): HistoryPoint {
+  // tokens_total is strictly the live ccusage series (the static profile
+  // total is a different scope; mixing the two would corrupt deltas).
+  // Collectors attach live_total only on fresh polls, so points in between
+  // simply skip the burn fields.
+  return {
     at: Date.now(),
-    tokens_total: p.tokens?.total,
-    cost_usd_total: p.tokens?.cost_usd_total,
+    tokens_total: p.tokens?.live_total,
+    cost_usd_total: p.tokens?.live_cost_usd,
     agents_cpu: p.agents?.reduce((s, a) => s + a.cpu, 0),
-  });
+  };
+}
+
+export async function putUsage(p: UsagePayload): Promise<void> {
+  const key = p.handle.toLowerCase();
+  const point = toHistoryPoint(p);
+
+  if (redis) {
+    await Promise.all([
+      redis.set(`usage:${key}`, { payload: p, at: Date.now() } satisfies Entry, { ex: ENTRY_TTL_SEC }),
+      redis
+        .rpush(`usage:hist:${key}`, JSON.stringify(point))
+        .then(() => redis.ltrim(`usage:hist:${key}`, -HISTORY_MAX, -1))
+        .then(() => redis.expire(`usage:hist:${key}`, ENTRY_TTL_SEC)),
+    ]);
+    return;
+  }
+
+  store.set(key, { payload: p, at: Date.now() });
+  const arr = hist.get(key) ?? [];
+  arr.push(point);
   if (arr.length > HISTORY_MAX) arr.splice(0, arr.length - HISTORY_MAX);
   hist.set(key, arr);
 }
 
-export function getUsage(handle: string): { payload: UsagePayload; ageSec: number } | null {
-  const e = store.get(handle.toLowerCase());
+export async function getUsage(handle: string): Promise<{ payload: UsagePayload; ageSec: number } | null> {
+  const key = handle.toLowerCase();
+  if (redis) {
+    const e = await redis.get<Entry>(`usage:${key}`);
+    if (!e) return null;
+    return { payload: e.payload, ageSec: Math.floor((Date.now() - e.at) / 1000) };
+  }
+  const e = store.get(key);
   if (!e) return null;
   return { payload: e.payload, ageSec: Math.floor((Date.now() - e.at) / 1000) };
 }
 
-export function getUsageHistory(handle: string): HistoryPoint[] {
-  return hist.get(handle.toLowerCase()) ?? [];
+export async function getUsageHistory(handle: string): Promise<HistoryPoint[]> {
+  const key = handle.toLowerCase();
+  if (redis) {
+    const raw = await redis.lrange(`usage:hist:${key}`, 0, -1);
+    return raw
+      .map((s) => {
+        try {
+          return (typeof s === "string" ? JSON.parse(s) : s) as HistoryPoint;
+        } catch {
+          return null;
+        }
+      })
+      .filter((p): p is HistoryPoint => p !== null);
+  }
+  return hist.get(key) ?? [];
 }

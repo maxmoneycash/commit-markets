@@ -33,7 +33,7 @@ export function WaitlistForm({ source = "waitlist" }: { source?: string }) {
 
   if (status === "done") {
     return (
-      <div className="mx-auto max-w-md rounded-lg border border-success/40 bg-success/5 px-4 py-3 text-center font-mono text-sm text-success">
+      <div className="mx-auto max-w-md rounded-md border border-success/40 bg-success/5 px-4 py-3 text-center font-mono text-sm text-success">
         ✓ {message}
       </div>
     );
@@ -52,16 +52,16 @@ export function WaitlistForm({ source = "waitlist" }: { source?: string }) {
           onChange={(e) => setEmail(e.target.value)}
           disabled={status === "loading"}
           className={cn(
-            "h-11 flex-1 rounded-lg border border-line bg-card/40 px-3.5 font-mono text-sm text-foreground",
+            "h-11 flex-1 rounded-md border border-input bg-card px-4 font-mono text-sm text-foreground",
             "placeholder:text-muted-foreground/60 outline-none transition-colors",
-            "focus:border-amber/70 focus:ring-1 focus:ring-amber/40 disabled:opacity-60",
+            "focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:opacity-60",
           )}
         />
         <button
           type="submit"
           disabled={status === "loading"}
           className={cn(
-            "h-11 rounded-lg bg-amber px-5 font-mono text-sm font-medium text-background transition-opacity",
+            "h-11 rounded-md bg-primary px-5 font-mono text-sm font-semibold text-primary-foreground transition-opacity",
             "hover:opacity-90 disabled:opacity-60",
           )}
         >

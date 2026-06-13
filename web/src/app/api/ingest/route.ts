@@ -27,7 +27,12 @@ export async function POST(req: Request) {
   const p = sanitize(body);
   if (!p) return Response.json({ error: "invalid payload" }, { status: 422 });
 
-  putUsage(p);
+  try {
+    await putUsage(p);
+  } catch (err) {
+    console.error("[ingest] store failed:", err);
+    return Response.json({ error: "store unavailable" }, { status: 503 });
+  }
   return Response.json({ ok: true, handle: p.handle });
 }
 
@@ -76,6 +81,8 @@ function sanitize(b: unknown): UsagePayload | null {
       cache_hit_rate: num(t.cache_hit_rate, 1),
       models_used: num(t.models_used, 10_000),
       avg_usd_month: num(t.avg_usd_month, 1e7),
+      live_total: num(t.live_total, 1e15),
+      live_cost_usd: num(t.live_cost_usd, 1e9),
       by_agent: Array.isArray(t.by_agent)
         ? t.by_agent
             .slice(0, 12)

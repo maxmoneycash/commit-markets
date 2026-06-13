@@ -18,6 +18,18 @@ export function SiteHeader() {
           <span className="tracking-tight">commit-markets</span>
         </Link>
         <div className="flex items-center gap-1">
+          <Link
+            href="/badges"
+            className="rounded-md px-2 py-1 font-mono text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            badges
+          </Link>
+          <Link
+            href="/waitlist"
+            className="rounded-md px-2 py-1 font-mono text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            waitlist
+          </Link>
           <a
             href="https://github.com/maxmoneycash/commit-markets"
             target="_blank"

@@ -239,7 +239,7 @@ export function NetworkPanel() {
         {Array.from({ length: 24 }, (_, i) => {
           const v = hist[i] ?? 0;
           const h = Math.max(1.5, (v / max) * 16);
-          return <rect key={i} x={i * 8} y={18 - h} width={5} height={h} rx={1} className={i === hist.length - 1 ? "fill-success" : "fill-muted-foreground/30"} />;
+          return <rect key={i} x={i * 8} y={18 - h} width={5} height={h} className={i === hist.length - 1 ? "fill-success" : "fill-muted-foreground/30"} />;
         })}
       </svg>
     </Chrome>

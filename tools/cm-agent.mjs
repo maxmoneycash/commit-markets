@@ -66,7 +66,8 @@ const ccusageSource = {
     for (const [bin, pre] of runners) {
       try {
         const out = execFileSync(bin, [...pre, "monthly", "--json", "--offline"], {
-          timeout: 90_000,
+          timeout: 300_000, // a loaded box can take ~3 min over a deep history
+
           encoding: "utf8",
           env: { ...process.env, PATH: `${os.homedir()}/.bun/bin:/opt/homebrew/bin:/usr/local/bin:${process.env.PATH}` },
         });
@@ -120,6 +121,24 @@ function machine() {
   };
 }
 
+// Live burn signal: the profile tokens.json only moves when that repo's
+// pipeline pushes, so poll ccusage directly on a slow cadence and merge the
+// moving total in as live_total (feeds the burn lane on /live).
+const LIVE_POLL_MS = 5 * 60_000;
+let liveLastPoll = 0;
+
+// Returns fresh data only on poll ticks (every ~5 min) — ticks in between get
+// null so the server's burn history isn't padded with stale duplicates.
+function liveTokens() {
+  if (Date.now() - liveLastPoll < LIVE_POLL_MS) return null;
+  liveLastPoll = Date.now();
+  try {
+    return ccusageSource.collect();
+  } catch {
+    return null;
+  }
+}
+
 async function tick() {
   let tokens = null;
   let source = "none";
@@ -134,6 +153,11 @@ async function tick() {
       /* next source */
     }
   }
+  const live = liveTokens();
+  if (live?.total != null) {
+    tokens = { ...(tokens ?? {}), live_total: live.total, live_cost_usd: live.cost_usd_total };
+    source += "+live";
+  }
   const payload = { v: 0, handle: HANDLE, machine: machine(), agents: scanAgents(), ...(tokens ? { tokens } : {}) };
   const res = await fetch(`${CM_URL}/api/ingest`, {
     method: "POST",
@@ -146,8 +170,19 @@ async function tick() {
   );
 }
 
-await tick();
+let inTick = false;
+async function guardedTick() {
+  if (inTick) return; // ccusage poll can block past the interval — skip pile-ups
+  inTick = true;
+  try {
+    await tick();
+  } finally {
+    inTick = false;
+  }
+}
+
+await guardedTick();
 if (WATCH) {
   console.log(`[cm-agent] watching — every ${INTERVAL / 1000}s, posting to ${CM_URL}`);
-  setInterval(() => tick().catch((e) => console.error("[cm-agent]", e.message)), INTERVAL);
+  setInterval(() => guardedTick().catch((e) => console.error("[cm-agent]", e.message)), INTERVAL);
 }
