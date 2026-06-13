@@ -2,8 +2,9 @@ import { putUsage, type UsagePayload } from "@/lib/usageStore";
 
 export const runtime = "nodejs";
 
-const MAX_BODY = 8 * 1024;
+const MAX_BODY = 16 * 1024; // model breakdown adds ~24 rows
 const AGENT_NAMES = /^[a-z0-9 ._-]{1,24}$/i;
+const MODEL_NAMES = /^[a-z0-9 ._/:-]{1,48}$/i; // e.g. claude-opus-4-7, openrouter/pony-alpha
 const HANDLE_RE = /^[a-zA-Z0-9-]{1,39}$/;
 
 // POST /api/ingest — collector endpoint (see tools/cm-agent.mjs).
@@ -83,6 +84,10 @@ function sanitize(b: unknown): UsagePayload | null {
       avg_usd_month: num(t.avg_usd_month, 1e7),
       live_total: num(t.live_total, 1e15),
       live_cost_usd: num(t.live_cost_usd, 1e9),
+      input_total: num(t.input_total, 1e15),
+      output_total: num(t.output_total, 1e15),
+      cache_read_total: num(t.cache_read_total, 1e15),
+      cache_write_total: num(t.cache_write_total, 1e15),
       by_agent: Array.isArray(t.by_agent)
         ? t.by_agent
             .slice(0, 12)
@@ -91,6 +96,24 @@ function sanitize(b: unknown): UsagePayload | null {
               const name = typeof r.name === "string" && AGENT_NAMES.test(r.name) ? r.name.toLowerCase() : null;
               const tokens = num(r.tokens, 1e15);
               return name && tokens !== undefined ? { name, tokens } : null;
+            })
+            .filter((a): a is NonNullable<typeof a> => a !== null)
+        : undefined,
+      by_model: Array.isArray(t.by_model)
+        ? t.by_model
+            .slice(0, 24)
+            .map((a) => {
+              const r = a as Record<string, unknown>;
+              const name = typeof r.name === "string" && MODEL_NAMES.test(r.name) ? r.name.slice(0, 48) : null;
+              if (!name) return null;
+              return {
+                name,
+                in: num(r.in, 1e15) ?? 0,
+                out: num(r.out, 1e15) ?? 0,
+                cacheRead: num(r.cacheRead, 1e15) ?? 0,
+                cacheWrite: num(r.cacheWrite, 1e15) ?? 0,
+                cost: num(r.cost, 1e9) ?? 0,
+              };
             })
             .filter((a): a is NonNullable<typeof a> => a !== null)
         : undefined,

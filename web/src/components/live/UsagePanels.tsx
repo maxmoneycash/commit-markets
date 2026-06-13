@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react";
 import { LiveChrome } from "./LivePanels";
 import { SegmentBar } from "./DotMatrix";
+import { ModelBreakdown } from "./ModelBreakdown";
 import type { UsagePayload, HistoryPoint } from "@/lib/usageStore";
 
 type Feed =
@@ -195,6 +196,59 @@ export function UsageSection({ handle }: { handle: string }) {
           </div>
         )}
       </LiveChrome>
+
+      <TokenFlowPanel tok={tok} />
+      {tok?.by_model && <ModelBreakdown models={tok.by_model} />}
     </>
+  );
+}
+
+// Where do the tokens actually go? Cache reads dominate agentic coding (~97%),
+// output is a tiny but expensive slice. This panel makes the read:write story
+// legible at a glance.
+function TokenFlowPanel({ tok }: { tok: UsagePayload["tokens"] }) {
+  const inTok = tok?.input_total ?? 0;
+  const out = tok?.output_total ?? 0;
+  const cacheRead = tok?.cache_read_total ?? 0;
+  const cacheWrite = tok?.cache_write_total ?? 0;
+  const total = inTok + out + cacheRead + cacheWrite;
+  if (total <= 0) return null;
+
+  const seg = (n: number) => (n / total) * 100;
+  const inOut = out > 0 ? Math.round((inTok + cacheRead + cacheWrite) / out) : null;
+  const cachePct = ((cacheRead + cacheWrite) / total) * 100;
+
+  return (
+    <LiveChrome label="token flow · where it goes" right={<FreshTag ageSec={0} />} className="sm:col-span-2">
+      <div className="flex items-baseline gap-4">
+        <div>
+          <div className="font-mono text-3xl font-bold text-foreground">
+            {inOut != null ? `${inOut}:1` : "—"}
+          </div>
+          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">READ : WRITE</div>
+        </div>
+        <div>
+          <div className="font-mono text-3xl font-bold text-amber">{cachePct.toFixed(1)}%</div>
+          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">CACHE READS</div>
+        </div>
+        <div className="ml-auto text-right">
+          <div className="font-mono text-3xl font-bold text-foreground">{seg(out).toFixed(2)}%</div>
+          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">OUTPUT</div>
+        </div>
+      </div>
+      {/* stacked share bar */}
+      <div className="mt-3 flex h-2.5 w-full overflow-hidden bg-muted-foreground/10">
+        <div className="h-full bg-muted-foreground/40" style={{ width: `${seg(cacheRead)}%` }} title="cache read" />
+        <div className="h-full bg-amber/70" style={{ width: `${seg(cacheWrite)}%` }} title="cache write" />
+        <div className="h-full bg-success/70" style={{ width: `${seg(inTok)}%` }} title="input" />
+        <div className="h-full bg-destructive/80" style={{ width: `${seg(out)}%` }} title="output" />
+      </div>
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <span className="flex items-center gap-1.5"><span className="size-1.5 bg-muted-foreground/40" />cache rd {fmtTok(cacheRead)}</span>
+        <span className="flex items-center gap-1.5"><span className="size-1.5 bg-amber/70" />cache wr {fmtTok(cacheWrite)}</span>
+        <span className="flex items-center gap-1.5"><span className="size-1.5 bg-success/70" />in {fmtTok(inTok)}</span>
+        <span className="flex items-center gap-1.5"><span className="size-1.5 bg-destructive/80" />out {fmtTok(out)}</span>
+      </div>
+    </LiveChrome>
   );
 }

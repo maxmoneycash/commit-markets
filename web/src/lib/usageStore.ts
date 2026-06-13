@@ -31,7 +31,24 @@ export type UsagePayload = {
     // pipeline only moves when that repo's collector pushes)
     live_total?: number;
     live_cost_usd?: number;
+    // in/out/cache split — the read:write ratio (cache reads dominate
+    // agentic coding; output is a tiny but expensive slice)
+    input_total?: number;
+    output_total?: number;
+    cache_read_total?: number;
+    cache_write_total?: number;
+    // per-model economics breakdown (aggregated from modelBreakdowns)
+    by_model?: ModelUsage[];
   };
+};
+
+export type ModelUsage = {
+  name: string;
+  in: number;
+  out: number;
+  cacheRead: number;
+  cacheWrite: number;
+  cost: number;
 };
 
 type Entry = { payload: UsagePayload; at: number };

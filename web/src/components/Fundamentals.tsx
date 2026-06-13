@@ -45,6 +45,11 @@ export function Fundamentals({
   const fmtTok = (n: number) =>
     n >= 1e9 ? `${(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : `${Math.round(n)}`;
 
+  // read:write ratio — everything fed into the model (input + cache) vs output
+  const readTotal = (t.input_total ?? 0) + (t.cache_read_total ?? 0) + (t.cache_write_total ?? 0);
+  const readWrite = t.output_total && t.output_total > 0 ? Math.round(readTotal / t.output_total) : null;
+  const cachePct = t.cache_hit_rate != null ? t.cache_hit_rate * 100 : null;
+
   return (
     <Panel>
       <PanelHeader className="flex items-center justify-between">
@@ -53,7 +58,7 @@ export function Fundamentals({
           self-reported
         </span>
       </PanelHeader>
-      <div className="grid grid-cols-2 gap-px bg-line sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px bg-line sm:grid-cols-3">
         <Cell label="Output" value={`${avgPerWeek.toFixed(1)}/wk`} sub="commits · the index" />
         <Cell
           label="Compute deployed"
@@ -61,14 +66,24 @@ export function Fundamentals({
           sub={t.total != null ? `${fmtTok(t.total)} tokens all-time` : "tokens n/a"}
         />
         <Cell
+          label="Cost / commit"
+          value={costPerCommit != null ? `$${costPerCommit.toFixed(2)}` : "—"}
+          sub="weekly spend ÷ output"
+        />
+        <Cell
           label="Efficiency"
           value={effPer100 != null ? `${effPer100.toFixed(1)}` : "—"}
           sub="commits per $100"
         />
         <Cell
-          label="Cost / commit"
-          value={costPerCommit != null ? `$${costPerCommit.toFixed(2)}` : "—"}
-          sub="weekly spend ÷ output"
+          label="Read : Write"
+          value={readWrite != null ? `${readWrite}:1` : "—"}
+          sub="tokens in ÷ out"
+        />
+        <Cell
+          label="Cache hit"
+          value={cachePct != null ? `${cachePct.toFixed(1)}%` : "—"}
+          sub="of tokens served from cache"
         />
       </div>
     </Panel>

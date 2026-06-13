@@ -47,13 +47,43 @@ const profileJsonSource = {
       cost_usd_total: t.totalCost,
       cache_hit_rate: t.totalTokens ? cacheRead / t.totalTokens : undefined,
       avg_usd_month: months ? (t.totalCost ?? 0) / months : undefined,
+      // in/out/cache split — the read:write ratio story lives here
+      input_total: t.inputTokens,
+      output_total: t.outputTokens,
+      cache_read_total: t.cacheReadTokens,
+      cache_write_total: t.cacheCreationTokens,
       by_agent: Object.entries(d.agents ?? {})
         .map(([name, a]) => ({ name, tokens: a?.totals?.totalTokens ?? 0 }))
         .filter((a) => a.tokens > 0)
         .sort((a, b) => b.tokens - a.tokens),
+      by_model: aggregateModels(d),
     };
   },
 };
+
+/** Roll every monthly modelBreakdowns entry up into one per-model record.
+ *  Counts/costs only — no paths, prompts, or args ever leave the machine. */
+function aggregateModels(d) {
+  const acc = new Map();
+  for (const m of d.monthly ?? []) {
+    for (const mb of m.modelBreakdowns ?? []) {
+      const name = mb.modelName;
+      if (!name) continue;
+      const cur = acc.get(name) ?? { name, in: 0, out: 0, cacheRead: 0, cacheWrite: 0, cost: 0 };
+      cur.in += mb.inputTokens ?? 0;
+      cur.out += mb.outputTokens ?? 0;
+      cur.cacheRead += mb.cacheReadTokens ?? 0;
+      cur.cacheWrite += mb.cacheCreationTokens ?? 0;
+      cur.cost += mb.cost ?? 0;
+      acc.set(name, cur);
+    }
+  }
+  return [...acc.values()]
+    .filter((m) => m.in + m.out + m.cacheRead > 0)
+    .sort((a, b) => b.cost - a.cost || b.in + b.out - (a.in + a.out))
+    .slice(0, 20)
+    .map((m) => ({ ...m, cost: +m.cost.toFixed(2) }));
+}
 
 /** Live ccusage fallback (pinned, offline) — totals only, slower. */
 const ccusageSource = {
