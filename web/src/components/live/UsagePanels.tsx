@@ -13,18 +13,19 @@ type Feed =
   | (UsagePayload & { connected: true; ageSec: number; history?: HistoryPoint[] })
   | { connected: false };
 
-// Burn lane: token-burn velocity (tokens/min) from consecutive history points.
-// Totals only move when a session flushes, so clamp negatives (collector
+// Burn lane: token-burn velocity (tokens/min) from consecutive live points.
+// The buffer interleaves 60s ticks (no tokens_total) with ~5-min live polls,
+// so filter to live points FIRST, then pair. Clamp negatives (collector
 // restarts) and ignore gaps longer than 30 min.
 function burnSeries(hist: HistoryPoint[]): number[] {
+  const live = hist.filter((p) => p.tokens_total != null);
   const out: number[] = [];
-  for (let i = 1; i < hist.length; i++) {
-    const a = hist[i - 1];
-    const b = hist[i];
-    if (a.tokens_total == null || b.tokens_total == null) continue;
+  for (let i = 1; i < live.length; i++) {
+    const a = live[i - 1];
+    const b = live[i];
     const dtMin = (b.at - a.at) / 60_000;
     if (dtMin <= 0 || dtMin > 30) continue;
-    out.push(Math.max(0, (b.tokens_total - a.tokens_total) / dtMin));
+    out.push(Math.max(0, (b.tokens_total! - a.tokens_total!) / dtMin));
   }
   return out;
 }
@@ -105,7 +106,10 @@ export function UsageSection({ handle }: { handle: string }) {
   const agents = feed.agents ?? [];
   const m = feed.machine;
   const burn = burnSeries(feed.history ?? []).slice(-24);
-  const burnMax = Math.max(1, ...burn);
+  // p95 scale with bars clamped to full height — one outlier delta (e.g. a
+  // collector restart) shouldn't flatten the whole lane
+  const burnSorted = [...burn].sort((a, b) => a - b);
+  const burnMax = Math.max(1, burnSorted[Math.min(burnSorted.length - 1, Math.floor(burnSorted.length * 0.95))] ?? 1);
   const burnNow = burn.length ? burn.slice(-5).reduce((s, x) => s + x, 0) / Math.min(5, burn.length) : null;
 
   return (
@@ -144,7 +148,7 @@ export function UsageSection({ handle }: { handle: string }) {
           <>
             <svg width="100%" height="18" viewBox="0 0 192 18" preserveAspectRatio="none" className="mt-3" aria-hidden>
               {burn.map((v, i) => {
-                const h = Math.max(1.5, (v / burnMax) * 16);
+                const h = Math.max(1.5, Math.min(16, (v / burnMax) * 16));
                 return (
                   <rect
                     key={i}
