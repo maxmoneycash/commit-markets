@@ -1,16 +1,10 @@
 import { getUserSummary, type UserSummary } from "@/lib/github";
+import { BOARD } from "@/lib/board";
 import { SearchBox } from "@/components/SearchBox";
 import { TickerCard } from "@/components/TickerCard";
 import { Panel, PanelHeader, PanelTitle } from "@/components/panel";
 
 export const revalidate = 3600;
-
-// Curated board of notable accounts (the "listed" market until real listings exist).
-const BOARD = [
-  "torvalds", "antirez", "sindresorhus", "gaearon", "tj", "yyx990803",
-  "kentcdodds", "ThePrimeagen", "mitchellh", "addyosmani", "leerob", "rauchg",
-  "shadcn", "t3dotgg", "jdalton", "maxmoneycash",
-];
 
 export default async function Home() {
   const settled = await Promise.all(BOARD.map((h) => getUserSummary(h)));
