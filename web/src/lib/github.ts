@@ -389,6 +389,90 @@ export async function getUserEvents(login: string): Promise<GhEvent[]> {
   });
 }
 
+// ── Discovery: search GitHub for the highest-output accounts ──────────────────
+// GitHub's user-search API CANNOT sort by commit count, so we cast a wide net
+// with the queryable proxies (followers / repos) then RANK locally by our own
+// commit index (totalLastYear from the contributions calendar). Bots + humans
+// are both included — no filtering on account type.
+
+export type Candidate = {
+  login: string;
+  name: string;
+  avatarUrl: string | null;
+  followers: number;
+  totalLastYear: number; // commits last 52w — the ranking key
+  price: number;
+  changePct30d: number;
+};
+
+// One page-bounded GitHub user search, returning logins (followers-sorted).
+async function searchLogins(q: string, pages: number): Promise<string[]> {
+  const out: string[] = [];
+  for (let page = 1; page <= pages; page++) {
+    const res = await fetch(
+      `${REST}/search/users?q=${encodeURIComponent(q)}&sort=followers&order=desc&per_page=100&page=${page}`,
+      { headers: { Authorization: `Bearer ${token()}`, Accept: "application/vnd.github+json" }, next: { revalidate: 3600 } },
+    );
+    if (!res.ok) break;
+    const data = await res.json();
+    const items: { login: string }[] = data.items ?? [];
+    for (const it of items) out.push(it.login);
+    if (items.length < 100) break; // last page
+  }
+  return out;
+}
+
+/**
+ * Find high-commit GitHub accounts. Pools candidates from several search
+ * queries, scores up to `scoreLimit` of them by our commit index (one
+ * contributions query each, bounded-parallel), returns ranked desc by commits.
+ */
+export async function searchTopCommitters(opts?: {
+  queries?: string[];
+  scoreLimit?: number;
+  minCommits?: number;
+}): Promise<Candidate[]> {
+  const queries = opts?.queries ?? ["followers:>20000", "followers:>5000 repos:>50", "repos:>800"];
+  const scoreLimit = opts?.scoreLimit ?? 90;
+  const minCommits = opts?.minCommits ?? 0;
+
+  // Pool unique logins across queries (each query caps at 1000 results).
+  const seen = new Set<string>();
+  for (const q of queries) {
+    for (const login of await searchLogins(q, 3)) seen.add(login);
+  }
+  const candidates = [...seen].slice(0, scoreLimit);
+
+  // Score in bounded-parallel batches — each getUserTicker = one GraphQL call.
+  const scored: Candidate[] = [];
+  const BATCH = 10;
+  for (let i = 0; i < candidates.length; i += BATCH) {
+    const chunk = candidates.slice(i, i + BATCH);
+    const rows = await Promise.all(
+      chunk.map(async (login): Promise<Candidate | null> => {
+        try {
+          const t = await getUserTicker(login, "1y");
+          if (!t) return null;
+          return {
+            login: t.handle,
+            name: t.name,
+            avatarUrl: t.avatarUrl,
+            followers: t.stats.followers,
+            totalLastYear: t.stats.totalLastYear,
+            price: t.stats.price,
+            changePct30d: t.stats.changePct30d,
+          };
+        } catch {
+          return null;
+        }
+      }),
+    );
+    for (const r of rows) if (r && r.totalLastYear >= minCommits) scored.push(r);
+  }
+  scored.sort((a, b) => b.totalLastYear - a.totalLastYear);
+  return scored;
+}
+
 // Templated analyst blurb from stats (Claude upgrade later).
 export function analystBlurb(t: Ticker): string {
   const s = t.stats;

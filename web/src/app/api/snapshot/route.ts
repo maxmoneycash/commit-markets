@@ -2,7 +2,7 @@ import { Redis } from "@upstash/redis";
 import { mkdir, appendFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getUserTicker } from "@/lib/github";
-import { TRACKED_HANDLES } from "@/lib/board";
+import { getTrackedHandles } from "@/lib/tracked";
 
 // ── Index snapshotter ────────────────────────────────────────────────────────
 // Records each tracked account's canonical velocity index + raw window counts on
@@ -54,8 +54,9 @@ export async function GET(request: Request) {
   const ts = new Date(tsMs).toISOString();
   const results: { handle: string; ok: boolean; sink?: string; error?: string }[] = [];
 
+  const handles = await getTrackedHandles();
   // Sequential to stay polite to the GitHub API and within the cron time budget.
-  for (const handle of TRACKED_HANDLES) {
+  for (const handle of handles) {
     try {
       const t = await getUserTicker(handle);
       if (!t) {
@@ -84,5 +85,5 @@ export async function GET(request: Request) {
   }
 
   const recorded = results.filter((r) => r.ok).length;
-  return Response.json({ ok: true, ts, recorded, total: TRACKED_HANDLES.length, results });
+  return Response.json({ ok: true, ts, recorded, total: handles.length, results });
 }
