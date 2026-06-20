@@ -102,6 +102,14 @@ module commit_oracle::oracle {
         *table::borrow(&borrow_global<Registry>(registry_addr).commitments, handle)
     }
 
+    // Accessors so consumers (markets) and tests can read a Commitment's fields.
+    public fun commitment_seq(c: &Commitment): u64 { c.seq }
+    public fun commitment_head(c: &Commitment): vector<u8> { c.head }
+    public fun commitment_pubkey(c: &Commitment): vector<u8> { c.pubkey }
+    public fun commitment_blob_name(c: &Commitment): vector<u8> { c.blob_name }
+    public fun commitment_blob_hash(c: &Commitment): vector<u8> { c.blob_hash }
+    public fun commitment_ts(c: &Commitment): u64 { c.ts }
+
     #[view]
     public fun has(registry_addr: address, handle: vector<u8>): bool acquires Registry {
         exists<Registry>(registry_addr)
