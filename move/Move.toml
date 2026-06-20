@@ -1,0 +1,12 @@
+[package]
+name = "commit_oracle"
+version = "0.1.0"
+authors = ["commit-markets"]
+
+[addresses]
+commit_oracle = "_"
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-core.git"
+subdir = "aptos-move/framework/aptos-framework"
+rev = "mainnet"
