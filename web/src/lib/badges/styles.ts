@@ -21,6 +21,7 @@ import {
   heatLevel,
   dotDefs,
 } from "./core";
+import { MACRO_EVENTS } from "@/lib/events";
 
 type Render = (d: BadgeData, theme: BadgeTheme) => string;
 
@@ -436,8 +437,258 @@ const glow: Render = (d) => {
 </svg>`;
 };
 
+// 11 — PRO · 1:1 static replica of the React profile card (header + 1Y range +
+// velocity candle chart with axis/volume/event marker + snapshot grid). Mirrors
+// PriceChart.tsx geometry and the [...slug] page layout so the README badge looks
+// exactly like the live app.
+const pro: Render = (d, theme) => {
+  const P = PAL[theme];
+  const up = d.up;
+  const cUp = "#22c55e"; // --success
+  const cDown = theme === "dark" ? "#e5484d" : "#dc2626"; // --destructive
+  const accent = up ? cUp : cDown;
+  const sym = esc(d.symbol);
+  const W = 760;
+  const tw = (t: string, size: number) => t.length * size * 0.6; // mono est.
+  const k = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : `${Math.round(v)}`);
+
+  // ---- derived stats (mirror [...slug]/page.tsx + github.ts) ----
+  let active = 0, longest = 0, run = 0, busiest = 0;
+  for (const day of d.days) {
+    if (day.commits > 0) {
+      active++; run++;
+      if (run > longest) longest = run;
+      if (day.commits > busiest) busiest = day.commits;
+    } else run = 0;
+  }
+  const marketCap = d.totalLastYear * 100 + d.followers * 50 + d.price * 1000;
+  const rangeLo = Math.min(...d.priceDaily);
+  const rangeHi = Math.max(...d.priceDaily);
+  const money = d.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const s: string[] = [];
+
+  // ============ HEADER ============
+  const tx = d.avatar ? 92 : 24;
+  if (d.avatar) {
+    s.push(
+      `<clipPath id="pav"><rect x="20" y="22" width="56" height="56" rx="12"/></clipPath>`,
+      `<image href="${d.avatar}" x="20" y="22" width="56" height="56" clip-path="url(#pav)"/>`,
+      `<rect x="20" y="22" width="56" height="56" rx="12" fill="none" stroke="${P.line}"/>`,
+    );
+  }
+  s.push(`<text x="${tx}" y="50" font-size="24" font-weight="700" fill="${P.text}">${sym}</text>`);
+  const userX = tx + tw(d.symbol, 24) + 12;
+  const userW = tw("USER", 10) + 18;
+  s.push(
+    `<rect x="${userX}" y="36" width="${userW}" height="19" rx="4" fill="none" stroke="${P.line}"/>`,
+    `<text x="${userX + userW / 2}" y="49" text-anchor="middle" font-size="10" letter-spacing="1" fill="${P.muted}">USER</text>`,
+  );
+  const hand = esc(clampHandle(d.handle, 22));
+  s.push(`<text x="${tx}" y="72" font-size="13" fill="${P.muted}">${hand}</text>`);
+  const liveX = tx + tw(hand, 13) + 12;
+  const liveW = tw("LIVE", 9) + 26;
+  s.push(
+    `<rect x="${liveX}" y="62" width="${liveW}" height="16" rx="4" fill="${cUp}" fill-opacity="0.1" stroke="${cUp}" stroke-opacity="0.3"/>`,
+    `<circle cx="${liveX + 9}" cy="70" r="2.5" fill="${cUp}"/>`,
+    `<text x="${liveX + 16}" y="73" font-size="9" letter-spacing="1" fill="${cUp}">LIVE</text>`,
+  );
+  s.push(
+    `<text x="${W - 22}" y="52" text-anchor="end" font-size="30" font-weight="700" fill="${P.text}">${money}</text>`,
+    `<text x="${W - 22}" y="76" text-anchor="end" font-size="14" fill="${accent}">${up ? "▲" : "▼"} ${Math.abs(d.changePct30d).toFixed(1)}% <tspan fill="${P.muted}">30d</tspan></text>`,
+  );
+  s.push(`<line x1="0" x2="${W}" y1="104" y2="104" stroke="${P.line}"/>`);
+
+  // ============ 1Y RANGE BAR ============
+  const barX = 24, barW = W - 48;
+  const pos = rangeHi > rangeLo ? Math.max(0, Math.min(1, (d.price - rangeLo) / (rangeHi - rangeLo))) : 0.5;
+  s.push(
+    `<text x="${barX}" y="130" font-size="10" letter-spacing="1" fill="${P.muted}">1Y LOW</text>`,
+    `<text x="${W / 2}" y="130" text-anchor="middle" font-size="10" letter-spacing="1" fill="${P.muted}">1Y RANGE</text>`,
+    `<text x="${W - barX}" y="130" text-anchor="end" font-size="10" letter-spacing="1" fill="${P.muted}">1Y HIGH</text>`,
+    `<rect x="${barX}" y="142" width="${barW}" height="6" rx="3" fill="url(#prg)"/>`,
+    `<circle cx="${barX + pos * barW}" cy="145" r="6" fill="${P.text}" stroke="${P.bg}" stroke-width="3"/>`,
+    `<text x="${barX}" y="170" font-size="12" fill="${P.text}">${k(rangeLo)}</text>`,
+    `<text x="${W / 2}" y="170" text-anchor="middle" font-size="12" fill="${P.muted}">now ${k(d.price)}</text>`,
+    `<text x="${W - barX}" y="170" text-anchor="end" font-size="12" fill="${P.text}">${k(rangeHi)}</text>`,
+  );
+  s.push(`<line x1="0" x2="${W}" y1="184" y2="184" stroke="${P.line}"/>`);
+
+  // ============ VELOCITY HEADER ============
+  s.push(`<text x="24" y="208" font-size="11" letter-spacing="1.5" fill="${P.muted}">VELOCITY · 1Y</text>`);
+  const tfs = ["1M", "1Y", "MAX"];
+  let tfx = W - 24;
+  for (let i = tfs.length - 1; i >= 0; i--) {
+    const label = tfs[i];
+    const pw = tw(label, 10) + 14;
+    tfx -= pw + 3;
+    const activeTf = label === "1Y";
+    s.push(
+      `<rect x="${tfx}" y="196" width="${pw}" height="18" rx="3" fill="${activeTf ? P.line : "none"}"/>`,
+      `<text x="${tfx + pw / 2}" y="209" text-anchor="middle" font-size="10" letter-spacing="1" fill="${activeTf ? P.text : P.faint}">${label}</text>`,
+    );
+  }
+  s.push(`<line x1="0" x2="${W}" y1="222" y2="222" stroke="${P.line}"/>`);
+
+  // ============ CHART (mirror PriceChart.tsx) ============
+  const chartTop = 222, chartH = 360, chartX = 16, chartW = W - 32;
+  const padR = 44, padT = 16, padB = 22, volH = 48, gap = 10;
+  const priceH = chartH - padT - padB - volH - gap;
+  const innerW = chartW - padR;
+  const N = d.days.length;
+  const maxC = Math.max(16, Math.floor(innerW / 8));
+  const B = Math.max(1, Math.ceil(N / maxC));
+  type C = { i: number; open: number; close: number; high: number; low: number; vol: number };
+  const candles: C[] = [];
+  for (let i = 0; i < N; i += B) {
+    const seg = d.priceDaily.slice(i, i + B);
+    if (!seg.length) continue;
+    const open = d.priceDaily[i - 1] ?? seg[0];
+    const close = seg[seg.length - 1];
+    candles.push({
+      i, open, close,
+      high: Math.max(open, ...seg),
+      low: Math.min(open, ...seg),
+      vol: d.days.slice(i, i + B).reduce((a, x) => a + x.commits, 0),
+    });
+  }
+  const hi = Math.max(1, ...candles.map((c) => c.high));
+  const lo = Math.min(...candles.map((c) => c.low));
+  const padv = (hi - lo) * 0.06 || 1;
+  const dMax = hi + padv, dMin = Math.max(0, lo - padv);
+  const yP = (v: number) => chartTop + padT + priceH * (1 - (v - dMin) / (dMax - dMin || 1));
+  const nC = candles.length;
+  const slot = nC ? innerW / nC : 0;
+  const bodyW = Math.max(1.5, slot * 0.7);
+  const xC = (b: number) => chartX + b * slot + slot / 2;
+  const volTop = chartTop + padT + priceH + gap;
+  const volMax = Math.max(1, ...candles.map((c) => c.vol));
+
+  // dot-grid background over the chart region
+  s.push(`<rect x="${chartX}" y="${chartTop}" width="${chartW}" height="${chartH}" fill="url(#pdots)"/>`);
+
+  // gridlines + y tick labels
+  for (let i = 0; i < 5; i++) {
+    const t = dMin + ((dMax - dMin) * i) / 4;
+    const gy = yP(t);
+    s.push(
+      `<line x1="${chartX}" x2="${chartX + innerW}" y1="${gy.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${P.line}"/>`,
+      `<text x="${chartX + innerW + 8}" y="${(gy + 3).toFixed(1)}" font-size="9" fill="${P.faint}">${k(t)}</text>`,
+    );
+  }
+  // candles + volume
+  candles.forEach((c, b) => {
+    const col = c.close >= c.open ? cUp : cDown;
+    const cx = xC(b);
+    const top = Math.min(yP(c.open), yP(c.close));
+    const bh = Math.max(1, Math.abs(yP(c.close) - yP(c.open)));
+    s.push(
+      `<line x1="${cx.toFixed(1)}" x2="${cx.toFixed(1)}" y1="${yP(c.high).toFixed(1)}" y2="${yP(c.low).toFixed(1)}" stroke="${col}"/>`,
+      `<rect x="${(cx - bodyW / 2).toFixed(1)}" y="${top.toFixed(1)}" width="${bodyW.toFixed(1)}" height="${bh.toFixed(1)}" rx="0.5" fill="${col}"/>`,
+    );
+    const vy = volTop + volH * (1 - c.vol / volMax);
+    s.push(
+      `<rect x="${(cx - bodyW / 2).toFixed(1)}" y="${vy.toFixed(1)}" width="${bodyW.toFixed(1)}" height="${Math.max(0, volTop + volH - vy).toFixed(1)}" fill="${col}" fill-opacity="0.25"/>`,
+    );
+  });
+  // last-price dashed line + tag — d.price is the authoritative current price
+  // (priceDaily/days lengths can differ in badge data, so don't index by N-1).
+  const lastVal = d.price;
+  const ly = yP(lastVal);
+  s.push(
+    `<line x1="${chartX}" x2="${chartX + innerW}" y1="${ly.toFixed(1)}" y2="${ly.toFixed(1)}" stroke="${accent}" stroke-dasharray="2 3" opacity="0.4"/>`,
+    `<rect x="${(chartX + innerW + 2).toFixed(1)}" y="${(ly - 8).toFixed(1)}" width="${padR - 4}" height="16" rx="2" fill="${accent}"/>`,
+    `<text x="${(chartX + innerW + 2 + (padR - 4) / 2).toFixed(1)}" y="${(ly + 3).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="600" fill="${P.bg}">${lastVal.toFixed(0)}</text>`,
+  );
+  // macro event markers (FABLE 5)
+  for (const ev of MACRO_EVENTS) {
+    const idx = d.days.findIndex((x) => x.date === ev.date);
+    if (idx < 0) continue;
+    const ex = xC(Math.floor(idx / B));
+    s.push(
+      `<line x1="${ex.toFixed(1)}" x2="${ex.toFixed(1)}" y1="${chartTop + padT}" y2="${volTop + volH}" stroke="${AMBER}" stroke-dasharray="2 4" opacity="0.5"/>`,
+      `<text x="${(ex + 4).toFixed(1)}" y="${chartTop + padT + 10}" font-size="8" fill="${AMBER}" opacity="0.9">${esc(ev.label)}</text>`,
+    );
+  }
+  // month labels (fixed names — Node ICU appends a period that the browser omits)
+  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  let lastM = "";
+  d.days.forEach((day, i) => {
+    const m = day.date.slice(0, 7);
+    if (m === lastM) return;
+    lastM = m;
+    const label = MON[new Date(day.date + "T00:00:00Z").getUTCMonth()];
+    s.push(`<text x="${xC(Math.floor(i / B)).toFixed(1)}" y="${chartTop + chartH - 6}" text-anchor="middle" font-size="9" fill="${P.faint}">${label}</text>`);
+  });
+  // AREA / CANDLES toggle (CANDLES active)
+  const tog = [["AREA", false], ["CANDLES", true]] as const;
+  let togx = chartX + 8;
+  s.push(`<rect x="${togx - 4}" y="${chartTop + 8}" width="${tw("AREA", 9) + tw("CANDLES", 9) + 26}" height="18" rx="4" fill="${P.bg}" fill-opacity="0.7" stroke="${P.line}"/>`);
+  for (const [label, on] of tog) {
+    const pw = tw(label, 9) + 10;
+    s.push(
+      on ? `<rect x="${togx}" y="${chartTop + 10}" width="${pw}" height="14" rx="3" fill="${P.line}"/>` : "",
+      `<text x="${togx + pw / 2}" y="${chartTop + 20}" text-anchor="middle" font-size="9" letter-spacing="1" fill="${on ? P.text : P.faint}">${label}</text>`,
+    );
+    togx += pw;
+  }
+  s.push(`<line x1="0" x2="${W}" y1="${chartTop + chartH}" y2="${chartTop + chartH}" stroke="${P.line}"/>`);
+
+  // ============ SNAPSHOT ============
+  const snapTop = chartTop + chartH; // 582
+  s.push(`<text x="24" y="${snapTop + 26}" font-size="11" letter-spacing="1.5" fill="${P.muted}">SNAPSHOT</text>`);
+  const gridTop = snapTop + 40;
+  const cols = 4, cellW = (W - 32) / cols, gx = 16, rowH = 62;
+  const cells: [string, string, string | null][] = [
+    ["MKT CAP", `$${(marketCap / 1000).toFixed(1)}K`, null],
+    ["COMMITS 52W", d.totalLastYear.toLocaleString("en-US"), null],
+    ["PEAK WEEK", `${d.peakWeek}`, null],
+    ["BUSIEST DAY", `${busiest}`, null],
+    ["ACTIVE DAYS", `${active}`, null],
+    ["LONGEST STREAK", `${longest}d`, null],
+    ["STREAK", `${d.streak}d`, d.streak > 0 ? cUp : null],
+    ["FOLLOWERS", d.followers.toLocaleString("en-US"), null],
+  ];
+  // dividers
+  for (let c = 1; c < cols; c++)
+    s.push(`<line x1="${gx + c * cellW}" x2="${gx + c * cellW}" y1="${gridTop}" y2="${gridTop + 2 * rowH}" stroke="${P.line}"/>`);
+  s.push(`<line x1="${gx}" x2="${gx + cols * cellW}" y1="${gridTop + rowH}" y2="${gridTop + rowH}" stroke="${P.line}"/>`);
+  cells.forEach(([label, value, col], i) => {
+    const cx = gx + (i % cols) * cellW;
+    const cy = gridTop + Math.floor(i / cols) * rowH;
+    s.push(
+      `<text x="${cx + 16}" y="${cy + 24}" font-size="10" letter-spacing="1" fill="${P.muted}">${label}</text>`,
+      `<text x="${cx + 16}" y="${cy + 46}" font-size="18" fill="${col ?? P.text}">${value}</text>`,
+    );
+  });
+  const H = gridTop + 2 * rowH + 30;
+  s.push(
+    `<text x="24" y="${H - 12}" font-size="9" fill="${P.faint}">github.com/${esc(clampHandle(d.handle))}</text>`,
+    `<text x="${W - 24}" y="${H - 12}" text-anchor="end" font-size="9" fill="${P.faint}">commit-markets</text>`,
+  );
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${MONO}" role="img" aria-label="${sym} on commit-markets">
+<title>${sym} — commit-markets</title>
+<defs>
+  ${dotDefs("pdots", theme === "dark" ? "#1b201e" : "#ececee")}
+  <linearGradient id="prg" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="${cDown}" stop-opacity="0.5"/>
+    <stop offset="0.5" stop-color="${P.muted}" stop-opacity="0.3"/>
+    <stop offset="1" stop-color="${cUp}" stop-opacity="0.5"/>
+  </linearGradient>
+  <clipPath id="pr"><rect width="${W}" height="${H}" rx="12"/></clipPath>
+</defs>
+<g clip-path="url(#pr)">
+  <rect width="${W}" height="${H}" fill="${P.bg}"/>
+  ${s.join("\n  ")}
+</g>
+<rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="11.5" fill="none" stroke="${P.line}"/>
+</svg>`;
+};
+
 export const STYLES: Record<string, { render: Render; needsAvatar: boolean }> = {
   card: { render: card, needsAvatar: true },
+  pro: { render: pro, needsAvatar: true },
   terminal: { render: terminal, needsAvatar: false },
   tape: { render: tape, needsAvatar: false },
   candles: { render: candles, needsAvatar: false },
