@@ -3,16 +3,18 @@ import { Panel, PanelHeader, PanelTitle, PanelContent } from "@/components/panel
 import { HatchSeparator } from "@/components/HatchSeparator";
 import { CopyButton } from "@/components/CopyButton";
 import { BadgeHandleForm } from "@/components/BadgeHandleForm";
+import { BadgePreview } from "@/components/BadgePreview";
 
 export const metadata: Metadata = {
   title: "README badges — commit-markets",
-  description: "Put your live $TICKER on your GitHub profile. Ten dynamic SVG styles.",
+  description: "Put your live $TICKER on your GitHub profile. Eleven dynamic SVG styles.",
 };
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 const VARIANTS: { style: string; name: string; blurb: string; flagship?: boolean }[] = [
-  { style: "card", name: "The Card", blurb: "avatar · price · candles · stats", flagship: true },
+  { style: "pro", name: "The Terminal", blurb: "the full live ticker page — chart · range · snapshot", flagship: true },
+  { style: "card", name: "The Card", blurb: "avatar · price · candles · stats" },
   { style: "terminal", name: "Terminal", blurb: "phosphor shell session, blinking cursor" },
   { style: "tape", name: "Ticker Tape", blurb: "scrolling marquee strip" },
   { style: "candles", name: "Candles", blurb: "52-week candlestick chart" },
@@ -68,13 +70,7 @@ export default async function BadgesPage({
               <CopyButton text={md(handle, v.style)} />
             </PanelHeader>
             <PanelContent className="flex justify-center overflow-x-auto py-6">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/api/badge?handle=${encodeURIComponent(handle)}&style=${v.style}`}
-                alt={`${v.name} badge for ${handle}`}
-                className="max-w-full"
-                loading="lazy"
-              />
+              <BadgePreview handle={handle} style={v.style} name={v.name} />
             </PanelContent>
           </Panel>
         ))}
@@ -106,7 +102,7 @@ export default async function BadgesPage({
         </Panel>
 
         <div className="border-x border-line px-4 py-6 text-center font-mono text-xs text-muted-foreground">
-          ten styles · live data · zero install
+          eleven styles · live data · zero install
         </div>
       </div>
     </main>
