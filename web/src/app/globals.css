@@ -181,6 +181,12 @@
     @apply bg-background text-foreground antialiased;
     font-synthesis-weight: none;
     text-rendering: optimizeLegibility;
+    /* The framed-hairline utilities paint 200vw-wide lines (left:-100vw) and some
+       cards embed wide SVGs; clip the x-axis so no page ever scrolls sideways.
+       `clip` (not `hidden`) avoids creating a scroll container, so the sticky
+       header keeps working. */
+    overflow-x: clip;
+    max-width: 100vw;
   }
 
   ::-webkit-scrollbar {
