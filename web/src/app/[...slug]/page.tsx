@@ -10,6 +10,7 @@ import { Fundamentals } from "@/components/Fundamentals";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { getClaim, oauthConfigured } from "@/lib/claims";
 
 export const revalidate = 3600;
 
@@ -49,6 +50,11 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
   const { slug } = await params;
   const t = await resolve(slug);
   if (!t) notFound();
+
+  // Verified-ownership claim (global state, so the page stays cacheable — we do
+  // NOT read the visitor's session cookie here, which would force dynamic render).
+  const claim = t.kind === "user" ? await getClaim(t.handle) : null;
+  const claimable = t.kind === "user" && !claim && oauthConfigured();
 
   const s = t.stats;
   const up = s.changePct30d >= 0;
@@ -105,6 +111,23 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
                       <span className="size-1 animate-pulse rounded-full bg-success" />
                       live
                     </Link>
+                  )}
+                  {claim && (
+                    <span
+                      className="flex shrink-0 items-center gap-1 rounded border border-sky-500/40 bg-sky-500/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-sky-500"
+                      title={`Verified owner — claimed ${new Date(claim.verifiedAt).toLocaleDateString()}`}
+                    >
+                      ✓ verified
+                    </span>
+                  )}
+                  {claimable && (
+                    <a
+                      href={`/api/claim/start?handle=${encodeURIComponent(t.handle)}`}
+                      className="flex shrink-0 items-center gap-1 rounded border border-line px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                      title="Own this GitHub account? Verify it with one click."
+                    >
+                      claim
+                    </a>
                   )}
                 </div>
               </div>
