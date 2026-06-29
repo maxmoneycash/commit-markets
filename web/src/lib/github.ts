@@ -4,6 +4,8 @@
 // User charts come from the GraphQL contributions calendar (daily commit counts
 // = velocity). Repo charts come from REST commit_activity (52 weekly counts).
 
+import { commitPatternFlag } from "@/lib/antibot";
+
 const GQL = "https://api.github.com/graphql";
 const REST = "https://api.github.com";
 
@@ -403,6 +405,8 @@ export type Candidate = {
   totalLastYear: number; // commits last 52w — the ranking key
   price: number;
   changePct30d: number;
+  flagged: boolean; // bot / constant-push pattern (excluded from the leaderboard)
+  flagReason: string;
 };
 
 // One page-bounded GitHub user search, returning logins (followers-sorted).
@@ -453,6 +457,7 @@ export async function searchTopCommitters(opts?: {
         try {
           const t = await getUserTicker(login, "1y");
           if (!t) return null;
+          const flag = commitPatternFlag(t.handle, t.daysYear);
           return {
             login: t.handle,
             name: t.name,
@@ -461,6 +466,8 @@ export async function searchTopCommitters(opts?: {
             totalLastYear: t.stats.totalLastYear,
             price: t.stats.price,
             changePct30d: t.stats.changePct30d,
+            flagged: flag.flagged,
+            flagReason: flag.reason,
           };
         } catch {
           return null;
