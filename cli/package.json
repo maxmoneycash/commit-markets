@@ -1,0 +1,14 @@
+{
+  "name": "commit-markets",
+  "version": "0.1.0",
+  "description": "The GitHub stock exchange in your terminal — live commit-velocity tickers, leaderboard, and README badges.",
+  "type": "module",
+  "bin": {
+    "commits": "index.mjs",
+    "commit-markets": "index.mjs"
+  },
+  "engines": { "node": ">=18" },
+  "files": ["index.mjs"],
+  "keywords": ["github", "commits", "stats", "badge", "cli", "leaderboard"],
+  "license": "MIT"
+}
