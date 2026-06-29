@@ -24,8 +24,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const handle = slug.join("/");
   const t = await resolve(slug);
-  if (!t) return { title: "ticker not found — commit-markets" };
-  const title = `${t.symbol} — commit-markets`;
+  if (!t) return { title: "ticker not found — commits.sh" };
+  const title = `${t.symbol} — commits.sh`;
   const description = analystBlurb(t);
   const og = `/api/og?handle=${encodeURIComponent(handle)}`;
   return {
@@ -181,13 +181,13 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
               <PanelHeader className="flex items-center justify-between gap-3">
                 <PanelTitle>Put this on your README</PanelTitle>
                 <CopyButton
-                  text={`[![${t.symbol} on commit-markets](${SITE}/api/badge?handle=${encodeURIComponent(t.handle)}&style=card)](${SITE}/${encodeURIComponent(t.handle)})`}
+                  text={`[![${t.symbol} on commits.sh](${SITE}/api/badge?handle=${encodeURIComponent(t.handle)}&style=pro)](${SITE}/${encodeURIComponent(t.handle)})`}
                 />
               </PanelHeader>
               <PanelContent className="flex flex-col items-center gap-4 py-6">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`/api/badge?handle=${encodeURIComponent(t.handle)}&style=card`}
+                  src={`/api/badge?handle=${encodeURIComponent(t.handle)}&style=pro`}
                   alt={`${t.symbol} README badge`}
                   className="max-w-full"
                   loading="lazy"
@@ -196,7 +196,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
                   href={`/badges?handle=${encodeURIComponent(t.handle)}`}
                   className="font-mono text-xs text-muted-foreground link-underline hover:text-foreground"
                 >
-                  9 more styles → terminal, ticker tape, stonks, receipt…
+                  10 more styles → card, terminal, ticker tape, receipt…
                 </Link>
               </PanelContent>
             </Panel>

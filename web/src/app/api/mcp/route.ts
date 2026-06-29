@@ -3,7 +3,7 @@ import { z } from "zod";
 import { searchTopCommitters } from "@/lib/github";
 import { resolveTicker, tickerSummary, SITE } from "@/lib/api";
 
-// MCP server for commit-markets — lets Claude/Cursor/agents pull live commit
+// MCP server for commits.sh — lets Claude/Cursor/agents pull live commit
 // "stock" data. Mounted at /api/mcp (basePath /api). Stateless; no Redis needed.
 const handler = createMcpHandler(
   (server) => {
@@ -70,7 +70,7 @@ const handler = createMcpHandler(
       "get_badge_markdown",
       {
         title: "Get README badge markdown",
-        description: "Markdown to embed a live commit-markets badge in a GitHub README.",
+        description: "Markdown to embed a live commits.sh badge in a GitHub README.",
         inputSchema: {
           handle: z.string(),
           style: z
@@ -81,7 +81,7 @@ const handler = createMcpHandler(
       },
       async ({ handle, style, theme }) => {
         const h = encodeURIComponent(handle.replace(/^@/, ""));
-        const md = `[![$${handle.toUpperCase()} on commit-markets](${SITE}/api/badge?handle=${h}&style=${style}&theme=${theme})](${SITE}/${h})`;
+        const md = `[![$${handle.toUpperCase()} on commits.sh](${SITE}/api/badge?handle=${h}&style=${style}&theme=${theme})](${SITE}/${h})`;
         return { content: [{ type: "text", text: md }] };
       },
     );

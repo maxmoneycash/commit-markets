@@ -1,6 +1,25 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 
+// Brand: a fire flame on a GitHub commit square.
+function LogoMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} aria-hidden>
+      <defs>
+        <linearGradient id="hdr-flame" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffe27a" />
+          <stop offset="0.55" stopColor="#ff9a1f" />
+          <stop offset="1" stopColor="#ff5a1f" />
+        </linearGradient>
+      </defs>
+      <rect width="32" height="32" rx="8" fill="#26a641" />
+      <g transform="translate(4 4)" fill="url(#hdr-flame)">
+        <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+      </g>
+    </svg>
+  );
+}
+
 function GitHubMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
@@ -14,8 +33,8 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 bg-background/80 px-2 backdrop-blur-sm">
       <div className="screen-line-bottom mx-auto flex h-(--header-height) max-w-3xl items-center justify-between border-x border-line px-4">
         <Link href="/" className="flex items-center gap-2 font-mono text-sm font-medium">
-          <span className="inline-block size-2 rounded-[2px] bg-success" />
-          <span className="tracking-tight">commit-markets</span>
+          <LogoMark className="size-5" />
+          <span className="tracking-tight">commits.sh</span>
         </Link>
         <div className="flex items-center gap-1">
           <Link

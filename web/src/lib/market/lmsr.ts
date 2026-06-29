@@ -1,6 +1,6 @@
 // Logarithmic Market Scoring Rule (Hanson 2003) — the automated market maker
 // for a binary (YES/NO) prediction market. Chosen over an order book because
-// commit-markets will have MANY thin markets (one per dev/event); LMSR always
+// commits.sh will have MANY thin markets (one per dev/event); LMSR always
 // quotes a live price and provides instant liquidity with no counterparty.
 //
 //   cost(qYes,qNo)  = b · ln(e^(qYes/b) + e^(qNo/b))        — the maker's scoring

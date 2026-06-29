@@ -6,7 +6,7 @@ import { BadgeHandleForm } from "@/components/BadgeHandleForm";
 import { BadgePreview } from "@/components/BadgePreview";
 
 export const metadata: Metadata = {
-  title: "README badges — commit-markets",
+  title: "README badges — commits.sh",
   description: "Put your live $TICKER on your GitHub profile. Eleven dynamic SVG styles.",
 };
 
@@ -27,7 +27,7 @@ const VARIANTS: { style: string; name: string; blurb: string; flagship?: boolean
 ];
 
 function md(handle: string, style: string): string {
-  return `[![$${handle.toUpperCase()} on commit-markets](${SITE}/api/badge?handle=${encodeURIComponent(handle)}&style=${style})](${SITE}/${encodeURIComponent(handle)})`;
+  return `[![$${handle.toUpperCase()} on commits.sh](${SITE}/api/badge?handle=${encodeURIComponent(handle)}&style=${style})](${SITE}/${encodeURIComponent(handle)})`;
 }
 
 export default async function BadgesPage({
@@ -95,7 +95,7 @@ export default async function BadgesPage({
             <p className="text-muted-foreground">
               Agents welcome: tell Claude or Cursor —{" "}
               <span className="text-foreground/90">
-                &quot;add my commit-markets badge to my README: {SITE}/api/badge?handle=YOUR_HANDLE&amp;style=card, linked to {SITE}/YOUR_HANDLE&quot;
+                &quot;add my commits.sh badge to my README: {SITE}/api/badge?handle=YOUR_HANDLE&amp;style=pro, linked to {SITE}/YOUR_HANDLE&quot;
               </span>
             </p>
           </PanelContent>

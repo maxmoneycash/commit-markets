@@ -1,11 +1,10 @@
 {
-  "name": "commit-markets",
+  "name": "commits-sh",
   "version": "0.1.0",
-  "description": "The GitHub stock exchange in your terminal — live commit-velocity tickers, leaderboard, and README badges.",
+  "description": "commits.sh — the GitHub stock exchange in your terminal. Live commit-velocity tickers, leaderboard, and README badges.",
   "type": "module",
   "bin": {
-    "commits": "index.mjs",
-    "commit-markets": "index.mjs"
+    "commits": "index.mjs"
   },
   "engines": { "node": ">=18" },
   "files": ["index.mjs"],

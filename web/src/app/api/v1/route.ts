@@ -4,7 +4,7 @@ import { CORS, SITE } from "@/lib/api";
 export function GET() {
   return Response.json(
     {
-      name: "commit-markets API",
+      name: "commits.sh API",
       version: "1",
       docs: `${SITE}/badges`,
       endpoints: {

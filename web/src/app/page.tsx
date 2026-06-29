@@ -23,7 +23,7 @@ export default async function Home() {
       <div className="mx-auto max-w-3xl">
         {/* hero */}
         <Panel className="px-4 py-10 text-center sm:py-14">
-          <div className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-success">commit-markets</div>
+          <div className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-success">commits.sh</div>
           <h1 className="text-4xl font-semibold tracking-tight text-foreground text-balance sm:text-5xl">
             The GitHub Stock Exchange
           </h1>

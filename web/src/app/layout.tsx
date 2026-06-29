@@ -8,7 +8,7 @@ import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
-  title: "commit-markets — The GitHub Stock Exchange",
+  title: "commits.sh — The GitHub Stock Exchange",
   description: "Every dev is a stock. Every repo is a ticker. Trade the tape of code.",
 };
 

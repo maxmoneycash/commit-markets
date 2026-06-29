@@ -18,11 +18,11 @@ function CandleMark({ size = 40 }: { size?: number }) {
 }
 
 export const metadata: Metadata = {
-  title: "commit-markets — Long the shippers, short the ghosters",
+  title: "commits.sh — Long the shippers, short the ghosters",
   description:
     "Perpetual futures on GitHub developer activity. Every dev is a stock, every repo a ticker. Join the waitlist for early access.",
   openGraph: {
-    title: "commit-markets — Long the shippers, short the ghosters",
+    title: "commits.sh — Long the shippers, short the ghosters",
     description:
       "Perpetual futures on GitHub developer activity. Join the waitlist for early access.",
   },
@@ -41,7 +41,7 @@ export default function WaitlistPage() {
         <Panel className="px-4 py-12 text-center sm:py-16">
           <CandleMark size={40} />
           <div className="mb-3 font-mono text-xs uppercase tracking-widest text-success">
-            commit-markets · early access
+            commits.sh · early access
           </div>
           <h1 className="mx-auto max-w-xl text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
             Long the shippers.
@@ -69,7 +69,7 @@ export default function WaitlistPage() {
         </Panel>
 
         <div className="border-x border-line px-4 py-6 text-center font-mono text-xs text-muted-foreground">
-          stocks price earnings · commit-markets prices commits
+          stocks price earnings · commits.sh prices commits
         </div>
       </div>
     </main>

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// commit-markets CLI — the GitHub stock exchange in your terminal.
+// commits.sh CLI — the GitHub stock exchange in your terminal.
 // Hits the public API (no auth). Override host with COMMITS_API.
 //
 //   npx commits <handle>            quote a user (or owner/repo)
@@ -42,7 +42,7 @@ async function main() {
   const cmd = pos[0];
   try {
     if (!cmd || cmd === "help" || args.includes("--help")) {
-      console.log(`commit-markets — the github stock exchange\n
+      console.log(`commits.sh — the github stock exchange\n
   commits <handle>            quote a user (or owner/repo)
   commits top [limit]         leaderboard by commit velocity
   commits compare <a> <b>     head-to-head
@@ -74,7 +74,7 @@ async function main() {
       const style = pos[2] || "pro";
       if (!handle) throw new Error("usage: commits embed <handle> [style]");
       const h = encodeURIComponent(handle.replace(/^@/, ""));
-      console.log(`[![$${handle.toUpperCase()} on commit-markets](${API}/api/badge?handle=${h}&style=${style})](${API}/${h})`);
+      console.log(`[![$${handle.toUpperCase()} on commits.sh](${API}/api/badge?handle=${h}&style=${style})](${API}/${h})`);
       return;
     }
     // default: quote a handle (supports owner/repo via positional join)

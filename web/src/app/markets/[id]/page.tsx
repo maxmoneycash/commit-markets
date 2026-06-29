@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const m = await getMarket(id);
-  return { title: m ? `${m.title} — commit-markets` : "Market — commit-markets" };
+  return { title: m ? `${m.title} — commits.sh` : "Market — commits.sh" };
 }
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: string }) {

@@ -22,7 +22,7 @@ export const revalidate = 300;
 export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }): Promise<Metadata> {
   const { handle } = await params;
   return {
-    title: `$${handle.toUpperCase()} · LIVE — commit-markets`,
+    title: `$${handle.toUpperCase()} · LIVE — commits.sh`,
     description: `Mission control for @${handle}: live telemetry, contributions, streaks, activity.`,
   };
 }

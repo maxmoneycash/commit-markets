@@ -7,7 +7,7 @@ import { listMarkets } from "@/lib/market/store";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Markets — commit-markets",
+  title: "Markets — commits.sh",
   description: "Play-money prediction markets on GitHub commit activity. Live odds, auto-resolved from real commits.",
 };
 

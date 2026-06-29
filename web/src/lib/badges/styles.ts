@@ -74,8 +74,8 @@ const card: Render = (d, theme) => {
        <rect x="20" y="20" width="40" height="40" rx="9" fill="none" stroke="${P.line}"/>`
     : "";
   const tx = d.avatar ? 72 : 22;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${sym} on commit-markets">
-<title>${sym} — commit-markets</title>
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${sym} on commits.sh">
+<title>${sym} — commits.sh</title>
 <defs>
   ${dotDefs("dg", theme === "dark" ? "#222826" : "#ececee")}
   <clipPath id="r"><rect width="${W}" height="${H}" rx="12"/></clipPath>
@@ -104,7 +104,7 @@ const card: Render = (d, theme) => {
   <line x1="0" x2="${W}" y1="322" y2="322" stroke="${P.line}"/>
   <g font-family="${MONO}" font-size="9" fill="${P.faint}">
     <text x="22" y="${H - 10}">github.com/${esc(clampHandle(d.handle))}</text>
-    <text x="${W - 22}" y="${H - 10}" text-anchor="end">commit-markets</text>
+    <text x="${W - 22}" y="${H - 10}" text-anchor="end">commits.sh</text>
   </g>
   <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="11.5" fill="none" stroke="${P.line}"/>
 </g>
@@ -138,7 +138,7 @@ const terminal: Render = (d) => {
   </g>
   <path d="${sparkPath(d.spark, 20, 142, W - 40, 38)}" fill="none" stroke="${g}" stroke-width="1.4" stroke-linejoin="round" opacity="0.9"/>
   <text x="20" y="198" font-family="${MONO}" font-size="12" fill="${g}">$ <tspan class="cur" fill="#d8dedb">▮</tspan></text>
-  <text x="${W - 16}" y="198" text-anchor="end" font-family="${MONO}" font-size="9" fill="#3f4543">commit-markets</text>
+  <text x="${W - 16}" y="198" text-anchor="end" font-family="${MONO}" font-size="9" fill="#3f4543">commits.sh</text>
   <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="9.5" fill="none" stroke="#23272a"/>
 </g>
 </svg>`;
@@ -149,9 +149,9 @@ const tape: Render = (d) => {
   const W = 600, H = 44;
   const c = col(d);
   const sep = `<tspan fill="#4a4f4c">  ◆  </tspan>`;
-  const seg = `${esc(d.symbol)} ${d.price.toFixed(2)} <tspan fill="${c}">${chg(d)}</tspan>${sep}COMMITS ${fmt(d.totalLastYear)}${sep}STREAK ${d.streak}D${sep}PEAK WK ${d.peakWeek}${sep}<tspan fill="#6f7a74">COMMIT-MARKETS</tspan>${sep}`;
+  const seg = `${esc(d.symbol)} ${d.price.toFixed(2)} <tspan fill="${c}">${chg(d)}</tspan>${sep}COMMITS ${fmt(d.totalLastYear)}${sep}STREAK ${d.streak}D${sep}PEAK WK ${d.peakWeek}${sep}<tspan fill="#6f7a74">COMMITS.SH</tspan>${sep}`;
   // estimate natural width (13px mono ≈ 7.9px/char) so the loop is seamless
-  const plain = `${d.symbol} ${d.price.toFixed(2)} ${chg(d)}  ◆  COMMITS ${fmt(d.totalLastYear)}  ◆  STREAK ${d.streak}D  ◆  PEAK WK ${d.peakWeek}  ◆  COMMIT-MARKETS  ◆  `;
+  const plain = `${d.symbol} ${d.price.toFixed(2)} ${chg(d)}  ◆  COMMITS ${fmt(d.totalLastYear)}  ◆  STREAK ${d.streak}D  ◆  PEAK WK ${d.peakWeek}  ◆  COMMITS.SH  ◆  `;
   const segW = Math.ceil(plain.length * 7.9);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(d.symbol)} ticker tape">
 <title>${esc(d.symbol)} — ticker tape</title>
@@ -204,7 +204,7 @@ const candles: Render = (d, theme) => {
   <rect x="${W - 66}" y="${(y - 9).toFixed(1)}" width="48" height="18" rx="3" fill="${c}"/>
   <text x="${W - 42}" y="${(y + 3.5).toFixed(1)}" text-anchor="middle" font-family="${MONO}" font-size="10" font-weight="700" fill="${P.bg}">${fmt(last)}</text>
   <text x="20" y="${H - 14}" font-family="${MONO}" font-size="9" fill="${P.faint}">52W · COMMIT VELOCITY</text>
-  <text x="${W - 20}" y="${H - 14}" text-anchor="end" font-family="${MONO}" font-size="9" fill="${P.faint}">commit-markets</text>
+  <text x="${W - 20}" y="${H - 14}" text-anchor="end" font-family="${MONO}" font-size="9" fill="${P.faint}">commits.sh</text>
   <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="11.5" fill="none" stroke="${P.line}"/>
 </g>
 </svg>`;
@@ -290,7 +290,7 @@ const stonks: Render = (d) => {
   <text x="${W - 24}" y="120" text-anchor="end" font-family="${MONO}" font-size="30" font-weight="800" fill="${c}">${up ? "+" : ""}${d.changePct30d.toFixed(1)}%</text>
   <text x="${W - 24}" y="146" text-anchor="end" font-family="${MONO}" font-size="13" fill="#8a90a0">${esc(d.symbol)} · 30 days</text>
   <text x="24" y="${H - 16}" font-family="${MONO}" font-size="10" fill="#5a6070">${fmt(d.totalLastYear)} commits/52w</text>
-  <text x="${W - 24}" y="${H - 16}" text-anchor="end" font-family="${MONO}" font-size="10" fill="#5a6070">commit-markets</text>
+  <text x="${W - 24}" y="${H - 16}" text-anchor="end" font-family="${MONO}" font-size="10" fill="#5a6070">commits.sh</text>
   <rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="11.5" fill="none" stroke="#23262e"/>
 </g>
 </svg>`;
@@ -298,7 +298,7 @@ const stonks: Render = (d) => {
 
 // 7 — PILL · shields-compatible -------------------------------------------------
 const pill: Render = (d) => {
-  const label = "commit-markets";
+  const label = "commits.sh";
   const value = `${d.symbol} ${chg(d)}`;
   const lw = Math.round(label.length * 6.6) + 16;
   const vw = Math.round(value.length * 7) + 18;
@@ -352,7 +352,7 @@ const bloomberg: Render = (d) => {
   ${kv(260, 110, "HANDLE", esc(clampHandle(d.handle, 14)).toUpperCase())}
   <path d="${sparkPath(d.spark, 20, 142, W - 40, 36)}" fill="none" stroke="${a}" stroke-width="1.5" stroke-linejoin="round"/>
   <line x1="0" x2="${W}" y1="${H - 22}" y2="${H - 22}" stroke="#1c1c1c"/>
-  <text x="14" y="${H - 8}" font-family="${MONO}" font-size="9" fill="${a}" opacity="0.7">COMMIT-MARKETS TERMINAL</text>
+  <text x="14" y="${H - 8}" font-family="${MONO}" font-size="9" fill="${a}" opacity="0.7">COMMITS.SH TERMINAL</text>
   <text x="${W - 14}" y="${H - 8}" text-anchor="end" font-family="${MONO}" font-size="9" fill="${a}" opacity="0.7">F8 EQUITY · 30D WINDOW</text>
   <rect width="${W}" height="${H}" fill="url(#scan)"/>
 </g>
@@ -387,7 +387,7 @@ const receipt: Render = (d) => {
 <title>${esc(d.symbol)} — commit receipt</title>
 <rect width="${W}" height="${H}" fill="${paper}" rx="4"/>
 ${zig(14, false)}${zig(H - 14, true)}
-<text x="${W / 2}" y="52" text-anchor="middle" font-family="${C}" font-size="17" font-weight="700" fill="${ink}" letter-spacing="3">COMMIT-MARKETS</text>
+<text x="${W / 2}" y="52" text-anchor="middle" font-family="${C}" font-size="17" font-weight="700" fill="${ink}" letter-spacing="3">COMMITS.SH</text>
 <text x="${W / 2}" y="72" text-anchor="middle" font-family="${C}" font-size="11" fill="${ink}" opacity="0.75">* OFFICIAL COMMIT RECEIPT *</text>
 ${dash(88)}
 ${row(112, "TICKER", esc(d.symbol))}
@@ -411,7 +411,7 @@ const glow: Render = (d) => {
   const W = 480, H = 200;
   const c = col(d);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(d.symbol)}">
-<title>${esc(d.symbol)} — commit-markets</title>
+<title>${esc(d.symbol)} — commits.sh</title>
 <defs>
   <radialGradient id="halo" cx="0.5" cy="1" r="0.9">
     <stop offset="0" stop-color="${c}" stop-opacity="0.28"/><stop offset="1" stop-color="${c}" stop-opacity="0"/>
@@ -431,7 +431,7 @@ const glow: Render = (d) => {
   <text x="28" y="64" font-family="${MONO}" font-size="11" fill="#7c858d">${esc(clampHandle(d.handle))} · 52 weeks</text>
   <text x="${W - 28}" y="44" text-anchor="end" font-family="${MONO}" font-size="24" font-weight="700" fill="#eef1f4">${d.price.toFixed(2)}</text>
   <text x="${W - 28}" y="64" text-anchor="end" font-family="${MONO}" font-size="13" font-weight="600" fill="${c}">${chg(d)} · 30d</text>
-  <text x="${W - 28}" y="${H - 18}" text-anchor="end" font-family="${MONO}" font-size="10" fill="#5a626a">commit-markets</text>
+  <text x="${W - 28}" y="${H - 18}" text-anchor="end" font-family="${MONO}" font-size="10" fill="#5a626a">commits.sh</text>
 </g>
 <rect x="0.75" y="0.75" width="${W - 1.5}" height="${H - 1.5}" rx="15.25" fill="none" stroke="url(#bord)" stroke-width="1.5"/>
 </svg>`;
@@ -664,11 +664,11 @@ const pro: Render = (d, theme) => {
   const H = gridTop + 2 * rowH + 30;
   s.push(
     `<text x="24" y="${H - 12}" font-size="9" fill="${P.faint}">github.com/${esc(clampHandle(d.handle))}</text>`,
-    `<text x="${W - 24}" y="${H - 12}" text-anchor="end" font-size="9" fill="${P.faint}">commit-markets</text>`,
+    `<text x="${W - 24}" y="${H - 12}" text-anchor="end" font-size="9" fill="${P.faint}">commits.sh</text>`,
   );
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${MONO}" role="img" aria-label="${sym} on commit-markets">
-<title>${sym} — commit-markets</title>
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${MONO}" role="img" aria-label="${sym} on commits.sh">
+<title>${sym} — commits.sh</title>
 <defs>
   ${dotDefs("pdots", theme === "dark" ? "#1b201e" : "#ececee")}
   <linearGradient id="prg" x1="0" y1="0" x2="1" y2="0">
