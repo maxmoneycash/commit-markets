@@ -364,7 +364,7 @@ export async function getUserEvents(login: string): Promise<GhEvent[]> {
     type: string;
     repo?: { name?: string };
     created_at?: string;
-    payload?: { commits?: unknown[]; action?: string; ref_type?: string; ref?: string | null };
+    payload?: { size?: number; commits?: unknown[]; action?: string; ref_type?: string; ref?: string | null };
   };
   const raw: RawEvent[] = await res.json();
   return raw.slice(0, 8).map((e) => {
@@ -372,8 +372,12 @@ export async function getUserEvents(login: string): Promise<GhEvent[]> {
     const at = e.created_at ?? "";
     const p = e.payload ?? {};
     switch (e.type) {
-      case "PushEvent":
-        return { verb: "PUSH", repo, detail: `${p.commits?.length ?? 0} commit${(p.commits?.length ?? 0) === 1 ? "" : "s"}`, at };
+      case "PushEvent": {
+        const n = p.size ?? p.commits?.length ?? 0;
+        return { verb: "PUSH", repo, detail: `${n} commit${n === 1 ? "" : "s"}`, at };
+      }
+      case "IssueCommentEvent":
+        return { verb: "COMMENT", repo, detail: "commented", at };
       case "PullRequestEvent":
         return { verb: "PR", repo, detail: p.action ?? "", at };
       case "IssuesEvent":
