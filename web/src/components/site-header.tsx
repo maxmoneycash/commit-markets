@@ -1,19 +1,12 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-// Brand: a fire flame on a GitHub commit square.
+// Brand: a white flame on a GitHub-green commit square. Two colors only.
 function LogoMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden>
-      <defs>
-        <linearGradient id="hdr-flame" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#ffe27a" />
-          <stop offset="0.55" stopColor="#ff9a1f" />
-          <stop offset="1" stopColor="#ff5a1f" />
-        </linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="8" fill="#26a641" />
-      <g transform="translate(4 4)" fill="url(#hdr-flame)">
+      <rect width="32" height="32" rx="8" fill="#39d353" />
+      <g transform="translate(4 4)" fill="#ffffff">
         <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
       </g>
     </svg>
