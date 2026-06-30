@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { claimCode, claimConfigured, setClaim, sign, SESSION_COOKIE } from "@/lib/claims";
 
 const HANDLE_RE = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,38})$/;
@@ -107,6 +108,12 @@ export async function POST(req: NextRequest) {
   }
 
   await setClaim({ login, githubId, name, avatarUrl, verifiedAt: new Date().toISOString() });
+  // Bust the ISR cache so the ✓ badge shows on the ticker page immediately.
+  try {
+    revalidatePath(`/${login}`);
+  } catch {
+    /* best-effort */
+  }
 
   const res = NextResponse.json({ ok: true, verified: true, login, profile: `/${login}` });
   res.cookies.set(SESSION_COOKIE, await sign({ login }), {
