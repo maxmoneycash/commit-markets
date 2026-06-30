@@ -27,13 +27,36 @@ export type Claim = {
 
 const claimKey = (login: string) => `claim:${login.toLowerCase()}`;
 
-/** True iff GitHub OAuth is configured in this environment. */
+/** True iff GitHub OAuth (one-click) is configured in this environment. */
 export function oauthConfigured(): boolean {
   return Boolean(
     process.env.GITHUB_OAUTH_CLIENT_ID &&
       process.env.GITHUB_OAUTH_CLIENT_SECRET &&
       process.env.AUTH_SECRET,
   );
+}
+
+/**
+ * True iff the gist-based claim flow is usable. Needs only AUTH_SECRET (to mint
+ * the per-login code); GITHUB_TOKEN is optional but raises the gist-read rate
+ * limit. This is the zero-setup path — live as soon as AUTH_SECRET exists.
+ */
+export function claimConfigured(): boolean {
+  return Boolean(process.env.AUTH_SECRET);
+}
+
+const CODE_PREFIX = "cmsh-";
+
+/**
+ * Deterministic, stateless verification code for a login. Because it's an HMAC
+ * of the login under our secret, we never have to store a pending challenge —
+ * we just recompute it at verify time. It needn't be secret: ownership is proven
+ * by the gist living UNDER that GitHub account (GitHub guarantees the owner),
+ * the code just binds the gist to a commits.sh claim.
+ */
+export async function claimCode(login: string): Promise<string> {
+  const sig = await hmac(`gist-claim:${login.toLowerCase()}`);
+  return CODE_PREFIX + sig.slice(0, 16);
 }
 
 export async function getClaim(login: string): Promise<Claim | null> {

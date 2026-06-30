@@ -38,8 +38,14 @@ export function SiteHeader() {
         </Link>
         <div className="flex items-center gap-1">
           <Link
-            href="/leaderboard"
+            href="/claim"
             className="rounded-md px-2 py-1 font-mono text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            claim
+          </Link>
+          <Link
+            href="/leaderboard"
+            className="hidden rounded-md px-2 py-1 font-mono text-xs text-muted-foreground hover:bg-accent hover:text-foreground sm:block"
           >
             leaderboard
           </Link>
