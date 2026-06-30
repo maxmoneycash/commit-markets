@@ -18,7 +18,7 @@ function ago(nowMs: number, at: string | undefined): string {
 function eventLine(e: LiveEntry["lastEvent"]): string {
   if (!e) return "no public activity yet";
   const repo = e.repo ? e.repo.split("/").slice(-1)[0] : "";
-  if (e.verb === "PUSH") return `pushed ${e.detail}${repo ? ` to ${repo}` : ""}`;
+  if (e.verb === "PUSH") return `${e.detail ? `pushed ${e.detail}` : "pushed"}${repo ? ` to ${repo}` : ""}`;
   if (e.verb === "PR") return `${e.detail} a PR${repo ? ` on ${repo}` : ""}`;
   if (e.verb === "RELEASE") return `shipped a release${repo ? ` on ${repo}` : ""}`;
   return `${e.verb.toLowerCase()}${repo ? ` · ${repo}` : ""}`;

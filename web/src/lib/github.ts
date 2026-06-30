@@ -373,8 +373,10 @@ export async function getUserEvents(login: string): Promise<GhEvent[]> {
     const p = e.payload ?? {};
     switch (e.type) {
       case "PushEvent": {
+        // GitHub's public events feed often omits size/commits, so don't claim a
+        // (wrong) count — the repo + timestamp are the reliable live signal.
         const n = p.size ?? p.commits?.length ?? 0;
-        return { verb: "PUSH", repo, detail: `${n} commit${n === 1 ? "" : "s"}`, at };
+        return { verb: "PUSH", repo, detail: n > 0 ? `${n} commit${n === 1 ? "" : "s"}` : "", at };
       }
       case "IssueCommentEvent":
         return { verb: "COMMENT", repo, detail: "commented", at };
