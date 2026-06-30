@@ -11,6 +11,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getClaim, claimConfigured } from "@/lib/claims";
+import { devRank } from "@/lib/rank";
 
 export const revalidate = 3600;
 
@@ -57,6 +58,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
   const claimable = t.kind === "user" && !claim && claimConfigured();
 
   const s = t.stats;
+  const rank = t.kind === "user" ? devRank(s.totalLastYear) : null;
   const up = s.changePct30d >= 0;
   const changeColor = up ? "text-success" : "text-destructive";
   const rangeLow = Math.min(...t.priceDaily);
@@ -70,7 +72,9 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
         : "border-line text-muted-foreground";
 
   const stats: { label: string; value: string; accent?: string }[] = [
-    { label: "Mkt Cap", value: `$${(s.marketCap / 1000).toFixed(1)}K` },
+    rank
+      ? { label: "Rank", value: `${rank.tier} · top ${rank.topPctLabel}`, accent: undefined }
+      : { label: "Mkt Cap", value: `$${(s.marketCap / 1000).toFixed(1)}K` },
     { label: "Commits 52w", value: s.totalLastYear.toLocaleString() },
     { label: "Peak week", value: `${s.peakWeek}` },
     { label: "Busiest day", value: `${s.busiestDay}` },
@@ -98,6 +102,15 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
               <div className="min-w-0">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <h1 className="truncate font-mono text-lg font-bold tracking-tight text-foreground sm:text-2xl">{t.symbol}</h1>
+                  {rank && (
+                    <span
+                      className="shrink-0 rounded px-1.5 py-0.5 font-mono text-xs font-bold tabular-nums"
+                      style={{ color: rank.color, border: `1px solid ${rank.color}55`, background: `${rank.color}14` }}
+                      title={`${rank.label} · top ${rank.topPctLabel} of shippers`}
+                    >
+                      {rank.tier}
+                    </span>
+                  )}
                   <span className="hidden shrink-0 rounded border border-line px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground sm:inline">
                     {t.kind}
                   </span>
@@ -130,6 +143,14 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
                     </Link>
                   )}
                 </div>
+                {rank && (
+                  <div className="mt-2 font-mono text-xs">
+                    <span className="font-bold uppercase tracking-wide" style={{ color: rank.color }}>
+                      {rank.label}
+                    </span>
+                    <span className="text-muted-foreground"> · top {rank.topPctLabel} of shippers · {rank.blurb}</span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="shrink-0 text-right">
@@ -150,7 +171,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
         <Panel>
           <ChartSection handle={t.handle} kind={t.kind} initial={{ days: t.days, priceDaily: t.priceDaily }} />
           <div className="screen-line-top flex justify-end px-4 py-3">
-            <ShareButton handle={t.handle} symbol={t.symbol} change={s.changePct30d} />
+            <ShareButton handle={t.handle} symbol={t.symbol} rankTier={rank?.tier} rankTopPct={rank?.topPctLabel} />
           </div>
         </Panel>
 

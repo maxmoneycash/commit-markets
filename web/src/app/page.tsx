@@ -37,22 +37,22 @@ export default async function Home() {
             Get noticed for the work you ship.
           </h1>
           <p className="mx-auto mt-4 max-w-lg text-pretty font-mono text-sm leading-relaxed text-muted-foreground">
-            You commit every day — but it&apos;s buried in a wall of green squares. commits.sh turns your GitHub history
-            into a verifiable, shareable profile that gets your shipping in front of the people who matter.
+            You commit every day — but it&apos;s buried in a wall of green squares. commits.sh ranks your GitHub
+            shipping and turns it into a profile worth showing off. Where do you land?
           </p>
-          <div className="mx-auto mt-8 flex max-w-md flex-col items-center gap-4">
-            <Link
-              href="/claim"
-              className="w-full rounded-md border border-sky-500/40 bg-sky-500/10 px-4 py-3 font-mono text-sm font-medium text-sky-500 transition-colors hover:bg-sky-500/20 sm:w-auto sm:px-8"
-            >
-              Claim your $TICKER →
-            </Link>
+          <div className="mx-auto mt-8 flex max-w-md flex-col items-center gap-3">
             <div className="w-full">
-              <div className="mb-2 font-mono text-[11px] uppercase tracking-wider text-muted-foreground/70">
-                or look up any dev
+              <div className="mb-2 font-mono text-[11px] uppercase tracking-wider text-success">
+                see your dev rank — type your handle
               </div>
               <SearchBox />
             </div>
+            <Link
+              href="/claim"
+              className="font-mono text-xs text-muted-foreground underline decoration-muted-foreground/30 underline-offset-2 hover:text-foreground"
+            >
+              already know yours? claim your $TICKER →
+            </Link>
           </div>
         </Panel>
 

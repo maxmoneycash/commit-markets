@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getUserTicker, getRepoTicker, type Ticker } from "@/lib/github";
+import { devRank } from "@/lib/rank";
 
 export const runtime = "nodejs";
 const size = { width: 1200, height: 630 };
@@ -33,6 +34,7 @@ export async function GET(req: Request) {
 
   const up = t.stats.changePct30d >= 0;
   const accent = up ? green : red;
+  const rank = t.kind === "user" ? devRank(t.stats.totalLastYear) : null;
   // real candlesticks (same look as the site chart): weekly OHLC of the momentum
   const UPC = "#22c55e";
   const DOWNC = "#e5484d";
@@ -69,14 +71,40 @@ export async function GET(req: Request) {
               <div style={{ fontSize: 28, color: "#8a9a94", marginTop: 4 }}>{t.handle}</div>
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-            <div style={{ fontSize: 72, fontWeight: 700 }}>
-              {t.stats.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {rank ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 132,
+                  height: 132,
+                  borderRadius: 24,
+                  border: `3px solid ${rank.color}`,
+                  background: `${rank.color}1f`,
+                  fontSize: 84,
+                  fontWeight: 700,
+                  color: rank.color,
+                }}
+              >
+                {rank.tier}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                <div style={{ fontSize: 64, fontWeight: 700, color: "#ededed" }}>{`TOP ${rank.topPctLabel}`}</div>
+                <div style={{ fontSize: 26, color: "#8a9a94", marginTop: 4 }}>of GitHub shippers</div>
+              </div>
             </div>
-            <div style={{ fontSize: 36, color: accent, marginTop: 2, display: "flex" }}>
-              {`${up ? "▲" : "▼"} ${Math.abs(t.stats.changePct30d)}% 30d`}
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+              <div style={{ fontSize: 72, fontWeight: 700 }}>
+                {t.stats.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <div style={{ fontSize: 36, color: accent, marginTop: 2, display: "flex" }}>
+                {`${up ? "▲" : "▼"} ${Math.abs(t.stats.changePct30d)}% 30d`}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div style={{ display: "flex", gap: 5, height: CH, marginTop: 40 }}>
@@ -103,7 +131,7 @@ export async function GET(req: Request) {
           ) : (
             <Stat label="STARS" value={t.stats.followers.toLocaleString()} />
           )}
-          <Stat label="MKT CAP" value={`$${(t.stats.marketCap / 1000).toFixed(1)}K`} />
+          <Stat label="30D" value={`${up ? "+" : ""}${t.stats.changePct30d}%`} valueColor={accent} />
         </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
@@ -116,11 +144,11 @@ export async function GET(req: Request) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       <div style={{ fontSize: 22, color: "#6b7a74", letterSpacing: 2 }}>{label}</div>
-      <div style={{ fontSize: 40, color: "#ededed", marginTop: 6 }}>{value}</div>
+      <div style={{ fontSize: 40, color: valueColor ?? "#ededed", marginTop: 6 }}>{value}</div>
     </div>
   );
 }

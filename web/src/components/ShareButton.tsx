@@ -5,17 +5,21 @@ import { useState } from "react";
 export default function ShareButton({
   handle,
   symbol,
-  change,
+  rankTier,
+  rankTopPct,
 }: {
   handle: string;
   symbol: string;
-  change: number;
+  rankTier?: string;
+  rankTopPct?: string;
 }) {
   const [copied, setCopied] = useState(false);
 
   const url = typeof window !== "undefined" ? window.location.href : "";
-  const verb = change >= 0 ? "pumping" : "dumping";
-  const tweet = `${symbol} is ${verb} ${Math.abs(change)}% this month 📈 — my proof-of-work profile on commits.sh`;
+  const tweet =
+    rankTier && rankTopPct
+      ? `${symbol} — ${rankTier}-tier, top ${rankTopPct} of GitHub shippers 📈 what's your dev rank? commits.sh`
+      : `${symbol} on commits.sh 📈 what's your dev rank?`;
   const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}&url=${encodeURIComponent(url)}`;
 
   async function copy() {
