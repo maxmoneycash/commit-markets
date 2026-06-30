@@ -1,145 +1,93 @@
 <div align="center">
 
-# commit-markets
+# commits.sh
 
-**Perpetual futures on GitHub developer activity.**
+**Proof of work for developers — get noticed for the work you ship.**
 
-List any GitHub account or repo → its commit history becomes a live activity
-index → trade a leveraged perp on it. Long if you think they'll keep shipping,
-short if you think they'll stall.
+Your best work is buried in a wall of green squares. commits.sh turns your GitHub
+history into a ranked, verifiable, shareable profile — a candlestick chart of your
+commit velocity, a dev **rank** (top X% of shippers), embeddable badges, and a
+live "shipping right now" board.
 
-*Stocks price in earnings. commit-markets prices in commits.*
+[**commits.sh**](https://commits.sh) · [a ticker](https://commits.sh/torvalds) · [badges](https://commits.sh/badges) · [leaderboard](https://commits.sh/leaderboard)
 
 </div>
 
 ---
 
-## What this is
+## What it is
 
-A GitHub account's commits are a time series. Turn that series into a tradeable
-index and you get a market whose underlying is real, public, verifiable
-developer output — not a vibe, not a token, an actual on-chain-attestable signal.
+Every GitHub account's commits are a time series. commits.sh turns that series into:
 
-- **List an account or repo.** An account aggregates every repo it owns into one
-  index — a "trade the dev" unit. (`vercel`, `torvalds`, your rival's handle.)
-- **The commit chart is the index.** It moves when commits land.
-- **You trade a perpetual against that index.** Traders set the *mark* price;
-  a *funding rate* ties the mark back to real commit activity.
+- **A dev rank** — a calibrated tier (`S+`…`D`) and percentile ("top 0.4% of GitHub
+  shippers"). The flex, and the share hook.
+- **A velocity chart** — candlesticks built from commit momentum (EWMA of daily
+  commits), not lines of code.
+- **Embeddable badges** — 11 self-contained, Camo-safe SVG styles for your README
+  or profile, each linking back to your ticker.
+- **A live board** — who's shipping *right now*, ranked by current velocity, with
+  real GitHub push/PR/release events on a live-ticking clock.
+- **Verified ownership** — prove you control your account (one public gist, no
+  OAuth app) to put a ✓ on your ticker.
+- **An agent surface** — a public REST API, an MCP server, and a CLI.
 
-This repository is the **index engine** — the fast oracle layer that turns
-commit history into the series a market settles against.
+It's a fun, viral, dev-first product — no account required to look anyone up.
 
-## How the market works (the one non-obvious part)
+## Repository layout
 
-A perp has **two numbers, and that's the design, not a bug** — exactly like a
-BTC perp (spot index + traded mark + funding):
+This is a monorepo. The product is `web/`; the rest is supporting and experimental.
 
-| | |
-|---|---|
-| **index** | the commit-activity series — moves when commits land |
-| **mark** | what traders are paying — moves with order flow |
-| **funding** | the rubber band: when mark drifts from index, the crowded side pays the other, pulling mark back to reality |
+```
+web/        The commits.sh app — Next.js (App Router), deployed on Vercel.
+            The product: rank, charts, badges, live board, claim/verify,
+            /api/v1 (REST), /api/mcp (MCP server), /api/og (share cards).
+cli/        The `commits` CLI (npx, zero-dep) — hits the public API.
+src/        Rust "cmkt" engine — a fast parallel commit harvester + indexer.
+move/       Experimental Aptos Move contracts (on-chain oracle / attestation).
+tools/      Node helpers for the on-chain/oracle layer (agent, anchor, oracle).
+legacy/     Original Python/bash prototype (superseded by web/ and src/).
+docs/       BADGES.md and other docs.
+data/       Generated output (gitignored).
+```
 
-This resolves the trap that kills the naïve version: if *trading* set the price
-(a vAMM/token), the chart would stop being "made of commits." Keeping the index
-and the mark as **separate lines tied by funding** lets the candles stay honestly
-made of commits while traders still move a price.
-
-**Same engine, unknowns to blue-chips — funding is the dial:**
-
-- **Busy account** → rich, lively index → mark glued to it. Trades like a blue chip.
-- **Brand-new account** → flat index → mark floats on pure speculation; longs
-  *pay funding* to hold the hype. Ship and the index rises (market "graduates");
-  ghost and longs bleed funding to shorts. A clean put-up-or-shut-up market.
-
-**Peer-funded, never house-backed.** The listed party can move their own index by
-committing, so the counterparty is other traders — owner-manipulation only
-redistributes between traders, it can never drain the protocol.
-
-## The index metric: commit velocity, not lines of code
-
-We tested cumulative-LOC (the obvious metric) on **6,671 real commits** and it
-failed: a single vendored-dependency commit moved the index by **±4.6M**, and the
-charts were dead-flat-then-vertical — nothing tradeable in between. So:
-
-> **The index of record is commit velocity** (commits per rolling window), with a
-> per-commit churn cap. It reflects "is this account shipping," is hard to fake,
-> and puts a tiny repo and a giant one on the same scale.
-
-The harvester keeps per-commit `added`/`deleted`, so any metric can be recomputed
-without re-harvesting.
-
-## Engine (`cmkt`)
-
-Rust, parallel across repos via `rayon` — the work is locating/cloning every repo
-an account owns and parsing `git log --numstat`, which fans out across all cores.
-(Replaces an earlier Python/bash prototype, now in [`legacy/`](legacy/).)
+## Run the app locally
 
 ```bash
-cargo build --release
-
-# account(s) -> data/<acct>.jsonl  (reads local checkouts in place; clones only
-# what's missing, in parallel; deletes each clone after extraction)
-./target/release/cmkt harvest <account> [<account> ...]
-
-# data/<acct>.jsonl -> activity index + summary + JSON artifacts
-./target/release/cmkt index <account> [<account> ...]
-
-# both
-./target/release/cmkt all <account> [<account> ...]
+cd web
+npm install
+npm run dev          # → http://localhost:3000  (needs Node ≥ 20)
 ```
 
-Requires `gh` (authenticated) and `git`. Output lands in `data/`, which is
-**gitignored** — it is derived from real, sometimes private, repositories and is
-never committed.
-
-### Example
-
-```
-$ cmkt index maxmoneycash
-================================================================
-maxmoneycash  (account activity index)
-================================================================
-  repos with commits : 72
-  commits            : 1805
-  span               : 2017-05-02  ->  2026-06-06
-  -- VELOCITY (metric of record) --
-  commits last 7d    : 11
-  commits last 30d   : 200
-  avg commits/week   : 3.8
-  peak week          : 93 commits
-```
-
-## Layout
-
-```
-src/main.rs        cmkt engine: harvest (parallel) + index
-legacy/            Python/bash prototype (chart renderer not yet ported)
-data/              generated output (gitignored)
-```
+A `GITHUB_TOKEN` (any classic PAT, public scope) raises the API rate limit.
+Optional Upstash Redis env (`UPSTASH_REDIS_REST_URL` / `_TOKEN`) enables claims,
+the live-board cache, and waitlist persistence. The app degrades gracefully
+without them.
 
 ## README badges
 
-Put your live ticker on your GitHub profile — ten dynamic SVG styles (hero
-card, terminal, ticker tape, candles, heatmap, stonks, shields pill, bloomberg,
-receipt, glow), all linking back to your ticker page:
+Put your live ticker on your GitHub profile — pick a style in the interactive
+gallery at [`/badges`](https://commits.sh/badges):
 
 ```md
-[![$YOU on commit-markets](https://SITE/api/badge?handle=YOU&style=card)](https://SITE/YOU)
+[![$YOU on commits.sh](https://commits.sh/api/badge?handle=YOU&style=pro)](https://commits.sh/YOU)
 ```
 
-Interactive picker with live previews: **`/badges`** · docs: [`docs/BADGES.md`](docs/BADGES.md)
+Eleven styles (pro, card, terminal, tape, candles, heatmap, stonks, pill,
+bloomberg, receipt, glow). Docs: [`docs/BADGES.md`](docs/BADGES.md).
 
 ## Status
 
-Standalone, exploratory but real. Being built **frontend-first**: a viral,
-play-money **GitHub Stock Exchange** (instant, no money, no chain) is the wedge —
-see [`web/`](web/). The real financial
-market layer (perp, funding, listing fee + lister fee-share, settlement venue) is
-a later, independent phase.
+Live and actively built, frontend-first. The on-chain layer (`move/`, `tools/`)
+is **experimental** — a future, independent phase exploring verifiable on-chain
+attestation of developer activity. The web product stands on its own.
+
+## License
+
+Not yet licensed — open-sourcing is planned. Until a `LICENSE` file is added, all
+rights reserved.
 
 ## Credits
 
 Commit-to-candle modeling inspired by
 [april-jk/stoke-your-code](https://github.com/april-jk/stoke-your-code)
-(idea transcribed and reimplemented; no code vendored).
+(idea reimplemented; no code vendored).

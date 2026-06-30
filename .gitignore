@@ -17,3 +17,4 @@ __pycache__/
 
 # internal docs never go in the public repo — keep them in commit-markets-internal
 /docs/internal/
+.vercel
