@@ -67,23 +67,23 @@ export async function GET(req: Request) {
               <img src={t.avatarUrl} width={108} height={108} style={{ borderRadius: 16, border: "2px solid #ffffff20" }} alt="" />
             )}
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ fontSize: 64, fontWeight: 700, letterSpacing: -1 }}>{t.symbol}</div>
-              <div style={{ fontSize: 28, color: "#8a9a94", marginTop: 4 }}>{t.handle}</div>
+              <div style={{ fontSize: 46, fontWeight: 700, letterSpacing: -1 }}>{t.symbol}</div>
+              <div style={{ fontSize: 26, color: "#8a9a94", marginTop: 4 }}>{t.handle}</div>
             </div>
           </div>
           {rank ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: 132,
-                  height: 132,
-                  borderRadius: 24,
+                  width: 104,
+                  height: 104,
+                  borderRadius: 20,
                   border: `3px solid ${rank.color}`,
                   background: `${rank.color}1f`,
-                  fontSize: 84,
+                  fontSize: 60,
                   fontWeight: 700,
                   color: rank.color,
                 }}
@@ -91,8 +91,8 @@ export async function GET(req: Request) {
                 {rank.tier}
               </div>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                <div style={{ fontSize: 64, fontWeight: 700, color: "#ededed" }}>{`TOP ${rank.topPctLabel}`}</div>
-                <div style={{ fontSize: 26, color: "#8a9a94", marginTop: 4 }}>of GitHub shippers</div>
+                <div style={{ fontSize: 52, fontWeight: 700, color: "#ededed" }}>{`TOP ${rank.topPctLabel}`}</div>
+                <div style={{ fontSize: 22, color: "#8a9a94", marginTop: 4 }}>of GitHub shippers</div>
               </div>
             </div>
           ) : (
