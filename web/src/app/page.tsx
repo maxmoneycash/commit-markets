@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { getUserSummary, type UserSummary } from "@/lib/github";
 import { getClaim } from "@/lib/claims";
+import { buildLiveBoard } from "@/lib/live";
 import { SearchBox } from "@/components/SearchBox";
 import { TickerCard } from "@/components/TickerCard";
+import { LiveBoard } from "@/components/LiveBoard";
 import { Panel, PanelHeader, PanelTitle } from "@/components/panel";
 
 export const revalidate = 3600;
@@ -15,7 +17,10 @@ const BOARD = [
 ];
 
 export default async function Home() {
-  const settled = await Promise.all(BOARD.map((h) => getUserSummary(h)));
+  const [settled, live] = await Promise.all([
+    Promise.all(BOARD.map((h) => getUserSummary(h))),
+    buildLiveBoard(6),
+  ]);
   const board = settled.filter((s): s is UserSummary => s !== null);
   const movers = [...board].sort((a, b) => b.changePct30d - a.changePct30d);
   const active = [...board].sort((a, b) => b.totalLastYear - a.totalLastYear);
@@ -55,6 +60,9 @@ export default async function Home() {
             </Link>
           </div>
         </Panel>
+
+        {/* live — shipping right now */}
+        <LiveBoard initial={live} />
 
         {/* top movers */}
         <Panel>
