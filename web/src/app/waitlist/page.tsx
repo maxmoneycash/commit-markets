@@ -18,11 +18,11 @@ function CandleMark({ size = 40 }: { size?: number }) {
 }
 
 export const metadata: Metadata = {
-  title: "commits.sh — Long the shippers, short the ghosters",
+  title: "commits.sh — Your shipping, finally worth showing off",
   description:
     "Perpetual futures on GitHub developer activity. Every dev is a stock, every repo a ticker. Join the waitlist for early access.",
   openGraph: {
-    title: "commits.sh — Long the shippers, short the ghosters",
+    title: "commits.sh — Your shipping, finally worth showing off",
     description:
       "Perpetual futures on GitHub developer activity. Join the waitlist for early access.",
   },
@@ -44,17 +44,17 @@ export default function WaitlistPage() {
             commits.sh · early access
           </div>
           <h1 className="mx-auto max-w-xl text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-            Long the shippers.
-            <br className="hidden sm:block" /> Short the ghosters.
+            Your shipping,
+            <br className="hidden sm:block" /> finally worth showing off.
           </h1>
           <p className="mx-auto mt-4 max-w-md font-mono text-sm leading-relaxed text-muted-foreground">
-            Perpetual futures on GitHub developer activity. Every dev is a stock,
-            every repo a ticker — trade the tape of code.
+            A verifiable proof-of-work profile built from your GitHub history —
+            so the work you actually ship is what gets you noticed.
           </p>
           <div className="mx-auto mt-8">
             <WaitlistForm source="waitlist-hero" />
             <p className="mt-3 font-mono text-[11px] text-muted-foreground/70">
-              Early access · no spam · play money, not financial advice
+              Early access · no spam
             </p>
           </div>
         </Panel>

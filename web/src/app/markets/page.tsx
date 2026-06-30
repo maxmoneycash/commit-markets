@@ -41,7 +41,7 @@ export default async function MarketsPage() {
         <MarketBoard initialMarkets={markets} />
 
         <div className="border-x border-line px-4 py-6 text-center font-mono text-[11px] text-muted-foreground">
-          play money · not financial advice
+          live commit velocity · refreshed hourly
         </div>
       </div>
     </main>

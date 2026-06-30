@@ -8,8 +8,9 @@ import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
-  title: "commits.sh — The GitHub Stock Exchange",
-  description: "Every dev is a stock. Every repo is a ticker. Trade the tape of code.",
+  title: "commits.sh — Get noticed for the work you ship",
+  description:
+    "commits.sh turns your GitHub commit history into a verifiable, shareable proof-of-work profile that gets developers noticed.",
 };
 
 export default function RootLayout({

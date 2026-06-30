@@ -107,8 +107,8 @@ export async function GET(req: Request) {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
-          <div style={{ fontSize: 26, color: green, letterSpacing: 4 }}>COMMIT-MARKETS</div>
-          <div style={{ fontSize: 24, color: "#8a9a94" }}>The GitHub Stock Exchange</div>
+          <div style={{ fontSize: 26, color: green, letterSpacing: 4 }}>COMMITS.SH</div>
+          <div style={{ fontSize: 24, color: "#8a9a94" }}>proof of work for developers</div>
         </div>
       </div>
     ),

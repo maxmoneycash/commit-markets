@@ -18,7 +18,7 @@ function Spark({ points, up }: { points: number[]; up: boolean }) {
   );
 }
 
-export function TickerCard({ s, rank }: { s: UserSummary; rank?: number }) {
+export function TickerCard({ s, rank, verified }: { s: UserSummary; rank?: number; verified?: boolean }) {
   const up = s.changePct30d >= 0;
   return (
     <Link
@@ -31,7 +31,14 @@ export function TickerCard({ s, rank }: { s: UserSummary; rank?: number }) {
         <img src={s.avatarUrl} alt="" className="size-8 shrink-0 rounded-md border border-line" />
       )}
       <div className="min-w-0 flex-1">
-        <div className="truncate font-mono text-sm font-medium text-foreground">{s.symbol}</div>
+        <div className="flex items-center gap-1.5">
+          <span className="truncate font-mono text-sm font-medium text-foreground">{s.symbol}</span>
+          {verified && (
+            <span className="shrink-0 font-mono text-[11px] text-sky-500" title="Verified owner">
+              ✓
+            </span>
+          )}
+        </div>
         <div className="truncate font-mono text-[11px] text-muted-foreground">{s.handle}</div>
       </div>
       <Spark points={s.spark} up={up} />

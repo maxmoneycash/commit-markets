@@ -15,7 +15,7 @@ export default function ShareButton({
 
   const url = typeof window !== "undefined" ? window.location.href : "";
   const verb = change >= 0 ? "pumping" : "dumping";
-  const tweet = `${symbol} is ${verb} ${Math.abs(change)}% on the month 📈 trade the GitHub Stock Exchange`;
+  const tweet = `${symbol} is ${verb} ${Math.abs(change)}% this month 📈 — my proof-of-work profile on commits.sh`;
   const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}&url=${encodeURIComponent(url)}`;
 
   async function copy() {

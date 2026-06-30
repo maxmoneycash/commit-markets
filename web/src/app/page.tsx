@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { getUserSummary, type UserSummary } from "@/lib/github";
+import { getClaim } from "@/lib/claims";
 import { SearchBox } from "@/components/SearchBox";
 import { TickerCard } from "@/components/TickerCard";
 import { Panel, PanelHeader, PanelTitle } from "@/components/panel";
@@ -18,20 +20,39 @@ export default async function Home() {
   const movers = [...board].sort((a, b) => b.changePct30d - a.changePct30d);
   const active = [...board].sort((a, b) => b.totalLastYear - a.totalLastYear);
 
+  // Which listed accounts have verified ownership (cheap Redis reads).
+  const claimedPairs = await Promise.all(
+    board.map(async (s) => [s.handle.toLowerCase(), Boolean(await getClaim(s.handle))] as const),
+  );
+  const claimed = new Set(claimedPairs.filter(([, c]) => c).map(([h]) => h));
+  const isVerified = (s: UserSummary) => claimed.has(s.handle.toLowerCase());
+
   return (
     <main className="px-2">
       <div className="mx-auto max-w-3xl">
         {/* hero */}
         <Panel className="px-4 py-10 text-center sm:py-14">
-          <div className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-success">commits.sh</div>
+          <div className="mb-3 font-mono text-xs uppercase tracking-[0.3em] text-success">proof of work</div>
           <h1 className="text-4xl font-semibold tracking-tight text-foreground text-balance sm:text-5xl">
-            The GitHub Stock Exchange
+            Get noticed for the work you ship.
           </h1>
-          <p className="mx-auto mt-3 max-w-md font-mono text-sm text-muted-foreground">
-            Every dev is a stock. Every repo is a ticker. Trade the tape of code.
+          <p className="mx-auto mt-4 max-w-lg text-pretty font-mono text-sm leading-relaxed text-muted-foreground">
+            You commit every day — but it&apos;s buried in a wall of green squares. commits.sh turns your GitHub history
+            into a verifiable, shareable profile that gets your shipping in front of the people who matter.
           </p>
-          <div className="mx-auto mt-8 max-w-md">
-            <SearchBox />
+          <div className="mx-auto mt-8 flex max-w-md flex-col items-center gap-4">
+            <Link
+              href="/claim"
+              className="w-full rounded-md border border-sky-500/40 bg-sky-500/10 px-4 py-3 font-mono text-sm font-medium text-sky-500 transition-colors hover:bg-sky-500/20 sm:w-auto sm:px-8"
+            >
+              Claim your $TICKER →
+            </Link>
+            <div className="w-full">
+              <div className="mb-2 font-mono text-[11px] uppercase tracking-wider text-muted-foreground/70">
+                or look up any dev
+              </div>
+              <SearchBox />
+            </div>
           </div>
         </Panel>
 
@@ -39,11 +60,11 @@ export default async function Home() {
         <Panel>
           <PanelHeader className="flex items-center justify-between">
             <PanelTitle>Top movers · 30d</PanelTitle>
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{board.length} listed</span>
+            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{board.length} profiles</span>
           </PanelHeader>
           <div className="divide-y divide-line">
             {movers.map((s, i) => (
-              <TickerCard key={s.handle} s={s} rank={i + 1} />
+              <TickerCard key={s.handle} s={s} rank={i + 1} verified={isVerified(s)} />
             ))}
           </div>
         </Panel>
@@ -55,14 +76,18 @@ export default async function Home() {
           </PanelHeader>
           <div className="divide-y divide-line">
             {active.slice(0, 8).map((s, i) => (
-              <TickerCard key={s.handle} s={s} rank={i + 1} />
+              <TickerCard key={s.handle} s={s} rank={i + 1} verified={isVerified(s)} />
             ))}
           </div>
         </Panel>
 
-        <div className="border-x border-line px-4 py-6 text-center font-mono text-xs text-muted-foreground">
-          play money · not financial advice
-        </div>
+        {/* claim CTA strip */}
+        <Link
+          href="/claim"
+          className="block border-x border-line px-4 py-6 text-center font-mono text-xs text-muted-foreground transition-colors hover:bg-accent/40"
+        >
+          That&apos;s your work up there — <span className="text-sky-500">claim your ticker</span> to get the verified ✓ →
+        </Link>
       </div>
     </main>
   );
