@@ -63,11 +63,11 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
   const changeColor = up ? "text-success" : "text-destructive";
   const rangeLow = Math.min(...t.priceDaily);
   const rangeHigh = Math.max(...t.priceDaily);
-  const verdict = s.changePct30d > 25 ? "bullish" : s.changePct30d < -25 ? "bearish" : "neutral";
+  const verdict = s.changePct30d > 25 ? "accelerating" : s.changePct30d < -25 ? "cooling" : "steady";
   const verdictCls =
-    verdict === "bullish"
+    verdict === "accelerating"
       ? "border-success/30 bg-success/10 text-success"
-      : verdict === "bearish"
+      : verdict === "cooling"
         ? "border-destructive/30 bg-destructive/10 text-destructive"
         : "border-line text-muted-foreground";
 
@@ -208,7 +208,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
         {/* analyst */}
         <Panel>
           <PanelHeader className="flex items-center justify-between">
-            <PanelTitle>Analyst note</PanelTitle>
+            <PanelTitle>The read</PanelTitle>
             <span className={`rounded border px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider ${verdictCls}`}>
               {verdict}
             </span>

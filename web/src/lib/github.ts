@@ -5,6 +5,7 @@
 // = velocity). Repo charts come from REST commit_activity (52 weekly counts).
 
 import { commitPatternFlag } from "@/lib/antibot";
+import { devRank } from "@/lib/rank";
 
 const GQL = "https://api.github.com/graphql";
 const REST = "https://api.github.com";
@@ -483,14 +484,29 @@ export async function searchTopCommitters(opts?: {
 // Templated analyst blurb from stats (Claude upgrade later).
 export function analystBlurb(t: Ticker): string {
   const s = t.stats;
-  const subj = t.kind === "user" ? t.name : t.handle;
-  if (s.changePct30d > 25)
-    return `${subj} is ripping — momentum up ${s.changePct30d}% on the month with a ${s.currentStreakDays || s.peakWeek}-${t.kind === "user" ? "day streak" : "commit peak week"}. Shippooor energy. Analysts say: bullish.`;
-  if (s.changePct30d < -25)
-    return `${subj} is cooling off, down ${Math.abs(s.changePct30d)}% this month. Either touching grass or cooking something off-main. Analysts say: accumulate the dip?`;
-  if (s.totalLastYear > 2000)
-    return `${subj} is a blue chip — ${s.totalLastYear.toLocaleString()} commits last year. Steady hands, relentless output. Analysts say: hold forever.`;
-  if (s.totalLastYear < 50)
-    return `${subj} is a deep-value microcap — ${s.totalLastYear} commits last year. High risk, high upside, possibly abandoned. Analysts say: lottery ticket.`;
-  return `${subj}: ${s.totalLastYear.toLocaleString()} commits last year, flat on the month. Quietly compounding. Analysts say: market perform.`;
+  const subj = (t.kind === "user" ? t.name : t.handle) || t.handle;
+  const commits = s.totalLastYear.toLocaleString();
+
+  if (t.kind === "user") {
+    const r = devRank(s.totalLastYear);
+    const tier = `top ${r.topPctLabel} of GitHub shippers`;
+    if (s.changePct30d > 25)
+      return `${subj} is on a tear — ${commits} commits this past year and accelerating. ${capitalize(tier)}. The kind of momentum that deserves to be seen.`;
+    if (s.changePct30d < -25)
+      return `${subj} eased off this month, but shipped ${commits} commits this year — still ${tier}. Heads-down on something, or recharging.`;
+    if (s.totalLastYear >= 2000)
+      return `${subj} is a machine: ${commits} commits last year, ${tier}. Relentless, consistent output that mostly goes unnoticed.`;
+    if (s.totalLastYear < 50)
+      return `${subj} is just getting started — ${commits} commits this year. Early days, but the graph only goes one way from here.`;
+    return `${subj} shipped ${commits} commits last year — ${tier}. Quietly compounding; exactly the work that deserves more eyes.`;
+  }
+
+  if (s.changePct30d > 25) return `${t.handle} is heating up — ${commits} commits this year and activity climbing. Something's cooking.`;
+  if (s.totalLastYear >= 2000) return `${t.handle} is deeply active: ${commits} commits last year. A repo that ships.`;
+  if (s.totalLastYear < 50) return `${t.handle} is quiet lately — ${commits} commits this year. Early, niche, or resting.`;
+  return `${t.handle}: ${commits} commits last year. Steady, ongoing work.`;
+}
+
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
