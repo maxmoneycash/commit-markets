@@ -27,13 +27,38 @@ export type Claim = {
 
 const claimKey = (login: string) => `claim:${login.toLowerCase()}`;
 
-/** True iff GitHub OAuth (one-click) is configured in this environment. */
-export function oauthConfigured(): boolean {
-  return Boolean(
-    process.env.GITHUB_OAUTH_CLIENT_ID &&
-      process.env.GITHUB_OAUTH_CLIENT_SECRET &&
-      process.env.AUTH_SECRET,
-  );
+/**
+ * GitHub OAuth/App credentials for one-click "Sign in with GitHub". Prefers
+ * creds provisioned via /api/setup (stored in Redis by the manifest flow), then
+ * falls back to env vars. This lets the owner self-provision with one click and
+ * never touch env vars or copy/paste a secret.
+ */
+export async function getOAuthCreds(): Promise<{ clientId: string; clientSecret: string } | null> {
+  if (redis) {
+    try {
+      const [id, secret] = await Promise.all([
+        redis.get<string>("oauth:client_id"),
+        redis.get<string>("oauth:client_secret"),
+      ]);
+      if (id && secret) return { clientId: id, clientSecret: secret };
+    } catch {
+      /* fall through to env */
+    }
+  }
+  const eid = process.env.GITHUB_OAUTH_CLIENT_ID;
+  const esec = process.env.GITHUB_OAUTH_CLIENT_SECRET;
+  return eid && esec ? { clientId: eid, clientSecret: esec } : null;
+}
+
+export async function setOAuthCreds(clientId: string, clientSecret: string): Promise<void> {
+  if (!redis) throw new Error("storage not configured");
+  await redis.set("oauth:client_id", clientId);
+  await redis.set("oauth:client_secret", clientSecret);
+}
+
+/** True iff one-click "Sign in with GitHub" is ready (creds + AUTH_SECRET). */
+export async function oauthConfigured(): Promise<boolean> {
+  return Boolean(process.env.AUTH_SECRET && (await getOAuthCreds()));
 }
 
 /**

@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sign, oauthConfigured, STATE_COOKIE } from "@/lib/claims";
+import { sign, getOAuthCreds, STATE_COOKIE } from "@/lib/claims";
 
 // Kick off GitHub OAuth so a visitor can prove they own their account and claim
 // (verify) their $TICKER. ?handle= is just where we send them back afterward.
 export async function GET(req: NextRequest) {
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? req.nextUrl.origin;
-  if (!oauthConfigured()) {
-    return NextResponse.redirect(`${site}/?claim_error=not_configured`);
+  const creds = await getOAuthCreds();
+  if (!creds || !process.env.AUTH_SECRET) {
+    return NextResponse.redirect(`${site}/claim?setup=needed`);
   }
-  const clientId = process.env.GITHUB_OAUTH_CLIENT_ID!;
+  const clientId = creds.clientId;
   const handle = req.nextUrl.searchParams.get("handle") ?? "";
   const state = await sign({ handle, nonce: crypto.randomUUID() });
 

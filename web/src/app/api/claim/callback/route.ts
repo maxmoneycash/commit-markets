@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sign, verifyToken, setClaim, oauthConfigured, SESSION_COOKIE, STATE_COOKIE } from "@/lib/claims";
+import { sign, verifyToken, setClaim, getOAuthCreds, SESSION_COOKIE, STATE_COOKIE } from "@/lib/claims";
 
 // GitHub redirects here after the user authorizes. We verify the signed state
 // (CSRF), exchange the code, read the authenticated user, and record the claim.
@@ -9,7 +9,8 @@ export async function GET(req: NextRequest) {
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? req.nextUrl.origin;
   const fail = (msg: string) => NextResponse.redirect(`${site}/?claim_error=${encodeURIComponent(msg)}`);
 
-  if (!oauthConfigured()) return fail("not_configured");
+  const creds = await getOAuthCreds();
+  if (!creds || !process.env.AUTH_SECRET) return fail("not_configured");
 
   const params = req.nextUrl.searchParams;
   const code = params.get("code");
@@ -27,8 +28,8 @@ export async function GET(req: NextRequest) {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
-        client_id: process.env.GITHUB_OAUTH_CLIENT_ID,
-        client_secret: process.env.GITHUB_OAUTH_CLIENT_SECRET,
+        client_id: creds.clientId,
+        client_secret: creds.clientSecret,
         code,
         redirect_uri: `${site}/api/claim/callback`,
       }),
