@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { LiveData, LiveEntry } from "@/lib/live";
+import { TIER_CHIP } from "@/lib/rank";
 
 function ago(nowMs: number, at: string | undefined): string {
   if (!at) return "—";
@@ -81,10 +82,7 @@ export function LiveBoard({ initial }: { initial: LiveData }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate font-mono text-base font-bold text-foreground">{leader.symbol}</span>
-            <span
-              className="shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] font-bold"
-              style={{ color: leader.tierColor, border: `1px solid ${leader.tierColor}55`, background: `${leader.tierColor}14` }}
-            >
+            <span className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[10px] font-bold ${TIER_CHIP[leader.tone]}`}>
               {leader.tier}
             </span>
             <span className="hidden shrink-0 font-mono text-[10px] uppercase tracking-wider text-muted-foreground sm:inline">

@@ -11,8 +11,22 @@ export type DevRank = {
   topPct: number; // e.g. 0.4  → "top 0.4%"
   topPctLabel: string; // "0.4%"
   percentile: number; // 0..100
-  color: string; // hex, for cards/badges
+  color: string; // hex — for the standalone OG share card only
+  tone: "success" | "foreground" | "muted"; // design-token tone for in-app UI
   blurb: string; // short flavor
+};
+
+// Design-token styles for a rank tone — used everywhere in-app so tier chips
+// match the rest of the design system (green success / mono), no ad-hoc colors.
+export const TIER_CHIP: Record<DevRank["tone"], string> = {
+  success: "border-success/30 bg-success/10 text-success",
+  foreground: "border-line bg-foreground/[0.06] text-foreground",
+  muted: "border-line bg-muted/40 text-muted-foreground",
+};
+export const TIER_TEXT: Record<DevRank["tone"], string> = {
+  success: "text-success",
+  foreground: "text-foreground",
+  muted: "text-muted-foreground",
 };
 
 const MU = 2.477; // log10(300)
@@ -46,30 +60,37 @@ export function devRank(commits52w: number): DevRank {
 
   let tier: DevRank["tier"];
   let color: string;
+  let tone: DevRank["tone"];
   let blurb: string;
   if (topPct <= 0.5) {
     tier = "S+";
     color = "#ffd23f";
+    tone = "success";
     blurb = "generational shipper";
   } else if (topPct <= 2) {
     tier = "S";
     color = "#39d98a";
+    tone = "success";
     blurb = "elite shipper";
   } else if (topPct <= 10) {
     tier = "A";
     color = "#38bdf8";
+    tone = "foreground";
     blurb = "prolific";
   } else if (topPct <= 30) {
     tier = "B";
     color = "#a78bfa";
+    tone = "foreground";
     blurb = "steady shipper";
   } else if (topPct <= 60) {
     tier = "C";
     color = "#94a3b8";
+    tone = "muted";
     blurb = "casual committer";
   } else {
     tier = "D";
     color = "#64748b";
+    tone = "muted";
     blurb = "just getting started";
   }
 
@@ -80,6 +101,7 @@ export function devRank(commits52w: number): DevRank {
     topPctLabel: formatTopPct(topPct),
     percentile,
     color,
+    tone,
     blurb,
   };
 }

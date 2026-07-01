@@ -11,7 +11,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getClaim, claimConfigured } from "@/lib/claims";
-import { devRank } from "@/lib/rank";
+import { devRank, TIER_CHIP, TIER_TEXT } from "@/lib/rank";
 
 export const revalidate = 3600;
 
@@ -104,8 +104,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
                   <h1 className="truncate font-mono text-lg font-bold tracking-tight text-foreground sm:text-2xl">{t.symbol}</h1>
                   {rank && (
                     <span
-                      className="shrink-0 rounded px-1.5 py-0.5 font-mono text-xs font-bold tabular-nums"
-                      style={{ color: rank.color, border: `1px solid ${rank.color}55`, background: `${rank.color}14` }}
+                      className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-xs font-bold tabular-nums ${TIER_CHIP[rank.tone]}`}
                       title={`${rank.label} · top ${rank.topPctLabel} of shippers`}
                     >
                       {rank.tier}
@@ -127,7 +126,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
                   )}
                   {claim && (
                     <span
-                      className="flex shrink-0 items-center gap-1 rounded border border-sky-500/40 bg-sky-500/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-sky-500"
+                      className="flex shrink-0 items-center gap-1 rounded border border-line bg-foreground/[0.06] px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-foreground"
                       title={`Verified owner — claimed ${new Date(claim.verifiedAt).toLocaleDateString()}`}
                     >
                       ✓ verified
@@ -145,9 +144,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
                 </div>
                 {rank && (
                   <div className="mt-2 font-mono text-xs">
-                    <span className="font-bold uppercase tracking-wide" style={{ color: rank.color }}>
-                      {rank.label}
-                    </span>
+                    <span className={`font-bold uppercase tracking-wide ${TIER_TEXT[rank.tone]}`}>{rank.label}</span>
                     <span className="text-muted-foreground"> · top {rank.topPctLabel} of shippers · {rank.blurb}</span>
                   </div>
                 )}

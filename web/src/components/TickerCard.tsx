@@ -34,7 +34,7 @@ export function TickerCard({ s, rank, verified }: { s: UserSummary; rank?: numbe
         <div className="flex items-center gap-1.5">
           <span className="truncate font-mono text-sm font-medium text-foreground">{s.symbol}</span>
           {verified && (
-            <span className="shrink-0 font-mono text-[11px] text-sky-500" title="Verified owner">
+            <span className="shrink-0 font-mono text-[11px] text-muted-foreground" title="Verified owner">
               ✓
             </span>
           )}

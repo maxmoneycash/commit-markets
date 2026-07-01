@@ -17,6 +17,7 @@ export type LiveEntry = {
   totalLastYear: number;
   tier: string;
   tierColor: string;
+  tone: "success" | "foreground" | "muted";
   topPctLabel: string;
   lastEvent: GhEvent | null;
 };
@@ -44,6 +45,7 @@ export async function buildLiveBoard(limit = 6): Promise<LiveData> {
         totalLastYear: s.totalLastYear,
         tier: r.tier,
         tierColor: r.color,
+        tone: r.tone,
         topPctLabel: r.topPctLabel,
         lastEvent: events[0] ?? null,
       };
