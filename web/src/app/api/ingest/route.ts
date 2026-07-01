@@ -1,4 +1,6 @@
 import { putUsage, type UsagePayload } from "@/lib/usageStore";
+import { tokenLogin } from "@/lib/pairing";
+import { revalidatePath } from "next/cache";
 
 export const runtime = "nodejs";
 
@@ -12,8 +14,16 @@ const HANDLE_RE = /^[a-zA-Z0-9-]{1,39}$/;
 // production swaps in per-user tokens backed by KV.
 export async function POST(req: Request) {
   const auth = req.headers.get("authorization") ?? "";
-  const expected = `Bearer ${process.env.CM_INGEST_TOKEN ?? "dev-token"}`;
-  if (auth !== expected) return Response.json({ error: "unauthorized" }, { status: 401 });
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  const shared = process.env.CM_INGEST_TOKEN ?? "dev-token";
+
+  // Per-user device token (from pairing) → forces handle to that login, so a
+  // device can only stream its OWN verified ticker. Shared token = legacy
+  // operator collector (trusts body.handle).
+  const deviceLogin = token && token !== shared ? await tokenLogin(token) : null;
+  if (token !== shared && !deviceLogin) {
+    return Response.json({ error: "unauthorized" }, { status: 401 });
+  }
 
   const raw = await req.text();
   if (raw.length > MAX_BODY) return Response.json({ error: "payload too large" }, { status: 413 });
@@ -25,11 +35,17 @@ export async function POST(req: Request) {
     return Response.json({ error: "invalid json" }, { status: 400 });
   }
 
+  // Bind the payload to the token's login (device tokens can't spoof handles).
+  if (deviceLogin && body && typeof body === "object") {
+    (body as Record<string, unknown>).handle = deviceLogin;
+  }
+
   const p = sanitize(body);
   if (!p) return Response.json({ error: "invalid payload" }, { status: 422 });
 
   try {
     await putUsage(p);
+    revalidatePath(`/${p.handle}/live`);
   } catch (err) {
     console.error("[ingest] store failed:", err);
     return Response.json({ error: "store unavailable" }, { status: 503 });
