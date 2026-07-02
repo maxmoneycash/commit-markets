@@ -66,6 +66,8 @@ function sanitize(b: unknown): UsagePayload | null {
 
   const out: UsagePayload = { v: 0, handle, updated: new Date().toISOString() };
 
+  if (typeof o.plan === "string" && /^(pro|max5|max20|api)$/.test(o.plan)) out.plan = o.plan;
+
   const m = o.machine as Record<string, unknown> | undefined;
   if (m && typeof m === "object") {
     out.machine = {

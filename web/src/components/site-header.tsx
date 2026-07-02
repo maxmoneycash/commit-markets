@@ -29,6 +29,12 @@ export function SiteHeader() {
             claim
           </Link>
           <Link
+            href="/connect"
+            className="hidden rounded-md px-2 py-1 font-mono text-xs text-muted-foreground hover:bg-accent hover:text-foreground sm:block"
+          >
+            connect
+          </Link>
+          <Link
             href="/leaderboard"
             className="hidden rounded-md px-2 py-1 font-mono text-xs text-muted-foreground hover:bg-accent hover:text-foreground sm:block"
           >
@@ -39,12 +45,6 @@ export function SiteHeader() {
             className="rounded-md px-2 py-1 font-mono text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             badges
-          </Link>
-          <Link
-            href="/waitlist"
-            className="rounded-md px-2 py-1 font-mono text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            waitlist
           </Link>
           <a
             href="https://github.com/maxmoneycash/commit-markets"

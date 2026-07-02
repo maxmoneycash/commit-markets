@@ -11,6 +11,7 @@ export type UsagePayload = {
   v: 0;
   handle: string;
   updated: string; // ISO
+  plan?: string; // "pro" | "max5" | "max20" | "api" — for the leverage metric
   machine?: {
     platform?: string;
     cpu_cores?: number;
@@ -50,6 +51,25 @@ export type ModelUsage = {
   cacheWrite: number;
   cost: number;
 };
+
+/** Monthly $ a subscription costs — for the leverage metric (value ÷ what you pay). */
+export function planMonthly(plan?: string): number {
+  switch (plan) {
+    case "pro": return 20;
+    case "max5": return 100;
+    case "max20": return 200;
+    default: return 0; // "api" / unknown → no leverage (they pay per token)
+  }
+}
+export function planLabel(plan?: string): string {
+  switch (plan) {
+    case "pro": return "Pro";
+    case "max5": return "Max 5×";
+    case "max20": return "Max 20×";
+    case "api": return "API";
+    default: return "";
+  }
+}
 
 type Entry = { payload: UsagePayload; at: number };
 export type HistoryPoint = { at: number; tokens_total?: number; cost_usd_total?: number; agents_cpu?: number };
