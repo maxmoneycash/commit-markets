@@ -116,7 +116,7 @@ export function ClaimForm({ initialHandle }: { initialHandle: string }) {
   if (phase === "done" && login) {
     return (
       <div className="flex flex-col items-center gap-4 px-4 py-12 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full border border-sky-500/40 bg-sky-500/10 font-mono text-xl text-sky-500">
+        <div className="flex size-12 items-center justify-center rounded-full border border-success/40 bg-success/10 font-mono text-xl text-success">
           ✓
         </div>
         <div>
@@ -191,7 +191,7 @@ export function ClaimForm({ initialHandle }: { initialHandle: string }) {
 
           <button
             onClick={openGistAndWatch}
-            className="w-full rounded-md border border-sky-500/40 bg-sky-500/10 px-4 py-3 font-mono text-sm font-medium text-sky-500 hover:bg-sky-500/20"
+            className="w-full rounded-md border border-success/40 bg-success/10 px-4 py-3 font-mono text-sm font-medium text-success hover:bg-success/20"
           >
             Open a public gist & copy code →
           </button>
@@ -203,8 +203,8 @@ export function ClaimForm({ initialHandle }: { initialHandle: string }) {
           </p>
 
           {watching && (
-            <div className="flex items-center gap-2 font-mono text-sm text-sky-500">
-              <span className="size-1.5 animate-pulse rounded-full bg-sky-500" />
+            <div className="flex items-center gap-2 font-mono text-sm text-success">
+              <span className="size-1.5 animate-pulse rounded-full bg-success" />
               watching for your gist…
               <button onClick={() => runVerify(false)} className="ml-auto text-xs text-muted-foreground underline hover:text-foreground">
                 check now

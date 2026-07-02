@@ -94,7 +94,7 @@ export default async function Home() {
           href="/claim"
           className="block border-x border-line px-4 py-6 text-center font-mono text-xs text-muted-foreground transition-colors hover:bg-accent/40"
         >
-          That&apos;s your work up there — <span className="text-sky-500">claim your ticker</span> to get the verified ✓ →
+          That&apos;s your work up there — <span className="text-success">claim your ticker</span> to get the verified ✓ →
         </Link>
       </div>
     </main>
