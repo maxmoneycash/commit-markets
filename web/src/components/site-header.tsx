@@ -41,6 +41,12 @@ export function SiteHeader() {
             leaderboard
           </Link>
           <Link
+            href="/grind"
+            className="hidden rounded-md px-2 py-1 font-mono text-xs text-muted-foreground hover:bg-accent hover:text-foreground sm:block"
+          >
+            grind
+          </Link>
+          <Link
             href="/badges"
             className="rounded-md px-2 py-1 font-mono text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
           >

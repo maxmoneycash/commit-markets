@@ -84,9 +84,11 @@ const redis = url && token ? new Redis({ url, token }) : null;
 const g = globalThis as unknown as {
   __cmUsage?: Map<string, Entry>;
   __cmUsageHist?: Map<string, HistoryPoint[]>;
+  __cmUsageHandles?: Set<string>;
 };
 const store = (g.__cmUsage ??= new Map<string, Entry>());
 const hist = (g.__cmUsageHist ??= new Map<string, HistoryPoint[]>());
+const localHandles = (g.__cmUsageHandles ??= new Set<string>());
 
 function toHistoryPoint(p: UsagePayload): HistoryPoint {
   // tokens_total is strictly the live ccusage series (the static profile
@@ -108,6 +110,7 @@ export async function putUsage(p: UsagePayload): Promise<void> {
   if (redis) {
     await Promise.all([
       redis.set(`usage:${key}`, { payload: p, at: Date.now() } satisfies Entry, { ex: ENTRY_TTL_SEC }),
+      redis.sadd("usage:handles", key), // index of connected users, for the grind board
       redis
         .rpush(`usage:hist:${key}`, JSON.stringify(point))
         .then(() => redis.ltrim(`usage:hist:${key}`, -HISTORY_MAX, -1))
@@ -116,6 +119,7 @@ export async function putUsage(p: UsagePayload): Promise<void> {
     return;
   }
 
+  localHandles.add(key);
   store.set(key, { payload: p, at: Date.now() });
   const arr = hist.get(key) ?? [];
   arr.push(point);
@@ -133,6 +137,41 @@ export async function getUsage(handle: string): Promise<{ payload: UsagePayload;
   const e = store.get(key);
   if (!e) return null;
   return { payload: e.payload, ageSec: Math.floor((Date.now() - e.at) / 1000) };
+}
+
+export type GrindRow = {
+  handle: string;
+  tokens: number;
+  value: number;
+  leverage: number;
+  plan?: string;
+  ageSec: number;
+};
+
+/** The "biggest grinders" board — everyone who's connected, ranked by value extracted. */
+export async function getGrindBoard(limit = 50): Promise<GrindRow[]> {
+  const handles = redis ? await redis.smembers("usage:handles") : [...localHandles];
+  const rows = await Promise.all(
+    handles.map(async (h): Promise<GrindRow | null> => {
+      const u = await getUsage(h);
+      const t = u?.payload.tokens;
+      if (!u || !t || !t.total) return null;
+      const value = t.cost_usd_total ?? 0;
+      const monthly = planMonthly(u.payload.plan);
+      return {
+        handle: u.payload.handle,
+        tokens: t.total,
+        value,
+        leverage: monthly > 0 ? value / monthly : 0,
+        plan: u.payload.plan,
+        ageSec: u.ageSec,
+      };
+    }),
+  );
+  return rows
+    .filter((r): r is GrindRow => r !== null)
+    .sort((a, b) => b.value - a.value)
+    .slice(0, limit);
 }
 
 export async function getUsageHistory(handle: string): Promise<HistoryPoint[]> {
